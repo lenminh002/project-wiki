@@ -13,7 +13,7 @@ A Claude Code skill that bootstraps a persistent project wiki with:
 ## Install
 
 ```bash
-git clone https://github.com/your-username/project-wiki
+git clone https://github.com/lenminh002/project-wiki
 cd project-wiki
 ./install.sh
 ```
@@ -21,7 +21,7 @@ cd project-wiki
 Or one-liner:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-username/project-wiki/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.sh | bash
 ```
 
 ## Use
