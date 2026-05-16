@@ -12,16 +12,26 @@ A Claude Code skill that bootstraps a persistent project wiki with:
 
 ## Install
 
+### macOS / Linux
+
+```bash
+curl -fsSL https://cdn.jsdelivr.net/gh/lenminh002/project-wiki@main/install.sh | bash
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://cdn.jsdelivr.net/gh/lenminh002/project-wiki@main/install.ps1 | iex
+```
+
+### From a clone (any OS)
+
 ```bash
 git clone https://github.com/lenminh002/project-wiki
 cd project-wiki
-./install.sh
-```
-
-Or one-liner:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.sh | bash
+./install.sh        # macOS / Linux
+# or on Windows:
+# .\install.ps1
 ```
 
 ## Use
@@ -82,7 +92,14 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 
 ## Uninstall
 
+macOS / Linux:
 ```bash
 rm -rf ~/.claude/skills/wiki-init
 # then remove the # wiki-init block from ~/.claude/CLAUDE.md
+```
+
+Windows (PowerShell):
+```powershell
+Remove-Item -Recurse -Force "$HOME\.claude\skills\wiki-init"
+# then remove the # wiki-init block from $HOME\.claude\CLAUDE.md
 ```

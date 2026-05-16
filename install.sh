@@ -10,9 +10,9 @@ echo "Installing wiki-init skill..."
 
 mkdir -p "$SKILL_DIR/templates"
 
-if [ -f "$SCRIPT_DIR/SKILL.md" ]; then
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$SCRIPT_DIR/SKILL.md" ] && [ -f "$SCRIPT_DIR/templates/CLAUDE.md.snippet" ]; then
   cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
-  cp "$SCRIPT_DIR/templates/"* "$SKILL_DIR/templates/"
+  cp -R "$SCRIPT_DIR/templates/." "$SKILL_DIR/templates/"
 else
   curl -fsSL "$REPO/SKILL.md" -o "$SKILL_DIR/SKILL.md"
   curl -fsSL "$REPO/templates/CONTEXT.md"        -o "$SKILL_DIR/templates/CONTEXT.md"
@@ -31,7 +31,7 @@ When the user types \`/wiki-init\`, invoke the Skill tool with \`skill: \"wiki-i
 if [ ! -f "$CLAUDE_MD" ]; then
   echo "$TRIGGER_BLOCK" > "$CLAUDE_MD"
   echo "  Created $CLAUDE_MD with wiki-init trigger"
-elif grep -q "# wiki-init" "$CLAUDE_MD"; then
+elif grep -qE "^# wiki-init$" "$CLAUDE_MD"; then
   echo "  Trigger already present in $CLAUDE_MD — skipping"
 else
   echo "" >> "$CLAUDE_MD"
