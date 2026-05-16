@@ -3,14 +3,23 @@ set -e
 
 SKILL_DIR="$HOME/.claude/skills/wiki-init"
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+REPO="https://raw.githubusercontent.com/lenminh002/project-wiki/main"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Installing wiki-init skill..."
 
-# Copy skill files
 mkdir -p "$SKILL_DIR/templates"
-cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
-cp "$SCRIPT_DIR/templates/"* "$SKILL_DIR/templates/"
+
+if [ -f "$SCRIPT_DIR/SKILL.md" ]; then
+  cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
+  cp "$SCRIPT_DIR/templates/"* "$SKILL_DIR/templates/"
+else
+  curl -fsSL "$REPO/SKILL.md" -o "$SKILL_DIR/SKILL.md"
+  curl -fsSL "$REPO/templates/CONTEXT.md"        -o "$SKILL_DIR/templates/CONTEXT.md"
+  curl -fsSL "$REPO/templates/log.md"            -o "$SKILL_DIR/templates/log.md"
+  curl -fsSL "$REPO/templates/bugs.md"           -o "$SKILL_DIR/templates/bugs.md"
+  curl -fsSL "$REPO/templates/CLAUDE.md.snippet" -o "$SKILL_DIR/templates/CLAUDE.md.snippet"
+fi
 
 echo "  Copied skill files to $SKILL_DIR"
 
