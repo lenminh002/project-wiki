@@ -1,0 +1,82 @@
+# Wiki workflow
+
+## Auto-Plan Rule
+When you generate any multi-step implementation plan, feature breakdown, or step-by-step approach — whether I asked for it or you suggested it — automatically save it as a file in `wiki/plans/active/`.
+
+Don't ask me. Just save it.
+
+Examples of when to auto-save:
+- "how should we build the auth system" → you generate steps → save it
+- "let's add payments" → you break it into steps → save it
+- You suggest "here's how I'd approach this" → save it
+- Any response with 3+ steps for building something → save it
+
+File name should match the feature (e.g. `auth.md`, `payments.md`, `landing-page.md`). Use lowercase-with-dashes.
+
+Every plan file must include YAML frontmatter:
+```yaml
+---
+status: active        # active | done | abandoned
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+tags: []              # infer from the plan topic
+related: []           # list of [[wikilinks]] to related plans
+---
+```
+
+## Plan Linking Rule
+When auto-saving a new plan, first scan `wiki/plans/active/` and `wiki/plans/done/` for related plans (topic overlap, or user says "build on / extend / replace / depends on"). If any are found:
+- Add a `## Related` section near the top of the new plan with bullets using these tags: `builds-on`, `extends`, `replaces`, `depends-on`, `conflicts-with`, `supersedes`. Use `[[wikilinks]]` (filename only, no path/extension).
+- Reciprocally update the related plan file — append the inverse tag pointing back at the new plan.
+- If the new plan `replaces` or `supersedes` an active plan, ask the user: "Move [[old-plan]] to done or abandoned?"
+- Omit the `## Related` section entirely if no related plans exist.
+
+```markdown
+## Related
+- builds-on: [[previous-plan]] — one-line why
+- depends-on: [[other-active]] — one-line why
+```
+
+## Plan Rules
+- Each plan is its own file in `wiki/plans/active/`
+- File names are lowercase-with-dashes
+- Changed plans → overwrite the file, update `updated:` frontmatter; don't make a new one
+- Abandoned plans → move file to `wiki/plans/abandoned/`, set `status: abandoned`
+- Done plans → move file to `wiki/plans/done/`, set `status: done`
+- Never delete plan files
+- Never leave stale plans in `active/`
+- When a plan's steps are all completed, ask me: "Plan [[name]] looks done. Move to done?" — only move it after I confirm
+- When moving a plan, do NOT rewrite `[[wikilinks]]` pointing to it — Obsidian resolves them by filename across subfolders
+
+## Read Rules
+When I say "read":
+1. Read `wiki/CONTEXT.md`
+2. Read `wiki/log.md`
+3. Read `wiki/bugs.md`
+4. Read all files in `wiki/plans/active/`
+5. Summarize everything back to me: project context, recent progress, active plans, open bugs
+6. Then ask "What are we working on?"
+
+## Status Check Rules
+When I say "status":
+1. List all files in `wiki/plans/active/`
+2. Summarize last 5 entries in `wiki/log.md`
+3. List open bugs from `wiki/bugs.md`
+4. Flag any stale plans (no `updated:` change in a while, or steps look complete) and ask if I want to move them to done or abandoned
+
+## Log Rule
+When I say "log":
+- Append a new entry to `wiki/log.md` summarizing what we just did in this session
+- Format: `## [Day N] YYYY-MM-DD | brief title` followed by bullet points
+
+## Bug Rule
+When I say "bug":
+- Ask me for a brief description if I haven't given one
+- Add it under `## Open` in `wiki/bugs.md` with the date and a short title
+- Format: `- [YYYY-MM-DD] **Title**: description`
+
+## How to Start a Session
+1. Read `wiki/CONTEXT.md`
+2. Read `wiki/log.md`
+3. Scan `wiki/plans/active/`
+4. Then help me with whatever I ask
