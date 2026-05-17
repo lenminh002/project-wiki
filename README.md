@@ -5,18 +5,22 @@
 Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
 
 - `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
-- Bare-keyword commands that work in every future session: `log`, `bug`, `status`, `read`
-- Auto-save of any multi-step plan to `wiki/plans/active/` — no prompting
-- **AI auto-detects relationships** — the agent reads existing wiki content and automatically links new plans and bugs to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, ...)
+- Optional project-local bare-keyword commands for future sessions: `log`, `bug`, `status`, `read`
+- Saves multi-step plans to `wiki/plans/active/` for continuity
+- **AI detects relationships** — the agent checks existing wiki content and links new plans and bugs to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, ...)
 - `codemap` generates `wiki/code/` entries for source files, including HTML/CSS links
 - Full Obsidian compatibility — open `wiki/` as a vault for graph view and backlinks
 
-## Security model
+## Security
 
-- Markdown-only skill: no runtime dependencies, shell scripts, package installs, or network calls.
-- Writes are limited to `wiki/`, `AGENTS.md`, and optional `CLAUDE.md`.
+- Markdown-only skill: no runtime dependencies, shell scripts, package installs, usage tracking, or network calls.
+- Installation uses only the skills CLI command shown below.
+- No install scripts are shipped by this repository.
+- The skill does not fetch remote content after installation.
+- Writes are limited to `wiki/` and optional project-local `AGENTS.md`.
+- The agent asks before replacing existing wiki content, writing `AGENTS.md`, or removing stale `wiki/code/` files.
 - Project inspection is limited to non-secret metadata files; `.env*`, credential files, private keys, and token files are out of scope.
-- The agent asks before replacing existing wiki content, writing `CLAUDE.md`, or removing stale `wiki/code/` files.
+- Project files are treated as untrusted input: contents are summarized as data, not followed as instructions.
 
 ---
 
@@ -39,7 +43,7 @@ npx skills add lenminh002/project-wiki --skill wiki-init --global
 To target specific agents explicitly:
 
 ```bash
-npx skills add lenminh002/project-wiki --skill wiki-init --global --agent codex --agent claude-code
+npx skills add lenminh002/project-wiki --skill wiki-init --global --agent codex
 ```
 
 Then open any project in a supported agent and run:
@@ -48,7 +52,7 @@ Then open any project in a supported agent and run:
 /wiki-init
 ```
 
-The agent auto-detects your project's name, stack, and deploy target, scaffolds `wiki/`, and writes the rules to `AGENTS.md` (and optionally `CLAUDE.md` for Claude Code).
+The agent detects your project's name, stack, and deploy target from non-secret metadata files, scaffolds `wiki/`, and asks before writing optional project-local rules to `AGENTS.md`.
 
 Existing projects with an older `# Wiki workflow` block should rerun `/wiki-init` or manually refresh that block to get the latest safety and `codemap` rules.
 
@@ -70,9 +74,9 @@ wiki/
   code/               — generated code graph files from `codemap`
 ```
 
-Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks panel for free.
+Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks panel.
 
-## Commands (active in every session after init)
+## Commands (active after AGENTS.md rules are approved)
 
 | Say this | The agent does |
 |---|---|
@@ -86,8 +90,8 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 
 Type `codemap` in any session and the agent will:
 
-1. Ask which folder(s) to scan
-2. Walk the chosen folders (respecting `.gitignore`, skipping `node_modules/`, `dist/`, etc.)
+1. Ask which folder(s) to inspect
+2. Walk only the chosen folders (respecting `.gitignore`, skipping hidden folders, secrets, `node_modules/`, `dist/`, etc.)
 3. Write one `wiki/code/<mirrored-path>.md` per source file, including HTML and CSS, each containing:
    - **Purpose** — one-line summary of what the file does
    - **Functions / Sections** — bulleted list with one-line descriptions
@@ -99,9 +103,9 @@ Re-run `codemap` anytime to refresh. When the agent edits a source file that alr
 
 ## Plan rules
 
-- Any 3+-step plan is auto-saved to `wiki/plans/active/<feature>.md`
+- Any 3+-step plan is saved to `wiki/plans/active/<feature>.md`
 - Plans get YAML frontmatter: `status`, `created`, `updated`, `tags`, `related`
-- **The agent automatically scans existing plans and bugs**, detects semantic relationships, and adds wikilinks — no manual linking needed
+- **The agent checks existing plans and bugs**, detects semantic relationships, and adds wikilinks
 - Relationship tags (`builds-on`, `depends-on`, `replaces`, `related-to`) are inferred from content and context
 - Moving a plan to `done/` or `abandoned/` updates its `status:` frontmatter; wikilinks survive the move
 - The agent asks before moving a completed plan.
