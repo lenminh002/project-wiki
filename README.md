@@ -17,15 +17,7 @@ Bootstraps a persistent project wiki that works with **any agentic coding tool**
 
 Install the skill globally with the cross-agent skills CLI:
 
-### macOS / Linux
-
-```bash
-npx skills add lenminh002/project-wiki --skill wiki-init --global
 ```
-
-### Windows (PowerShell)
-
-```powershell
 npx skills add lenminh002/project-wiki --skill wiki-init --global
 ```
 
@@ -113,10 +105,7 @@ Remove `AGENTS.md` (or the `# Wiki Bootstrap Rule` / `# Wiki workflow` blocks fr
 
 If you installed the persistent trigger with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` skill.
 
-```bash
+```
 npx skills remove wiki-init --global
 ```
 
-```powershell
-npx skills remove wiki-init --global
-```
