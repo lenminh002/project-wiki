@@ -37,7 +37,7 @@ Then open any project in a supported agent and run:
 
 The agent detects your project's name, stack, and deploy target from non-secret metadata files, scaffolds `wiki/`, and asks before writing optional project-local rules to `AGENTS.md`.
 
-Run `/wiki-help` anytime for a quick command cheat sheet.
+Run `wiki-help` anytime for a quick command cheat sheet.
 
 Existing projects with an older `# Wiki workflow` block should rerun `/wiki-init` or manually refresh that block to get the latest safety and `codemap` rules.
 
