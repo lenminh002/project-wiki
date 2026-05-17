@@ -1,6 +1,6 @@
 ---
 name: wiki-init
-description: "Scaffold a wiki/ folder with CONTEXT.md, log.md, bugs.md, plans/{active,done,abandoned}/ and install rules into project CLAUDE.md so bare keywords log/bug/status/read work in future sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan."
+description: "Scaffold a wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and install rules into project CLAUDE.md so bare keywords log/bug/status/read work in future sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
 trigger: /wiki-init
 ---
 
@@ -31,17 +31,20 @@ Create the following directories and placeholder files:
 
 ```
 wiki/
+wiki/bugs/
+wiki/bugs/open/
+wiki/bugs/fixed/
 wiki/plans/
 wiki/plans/active/
 wiki/plans/done/
 wiki/plans/abandoned/
 ```
 
-Write a `.gitkeep` file into each of the three `plans/` subdirectories so they are committed by git even when empty.
+Write a `.gitkeep` file into each of the `bugs/` and `plans/` subdirectories so they are committed by git even when empty.
 
 ### Step 3 — Copy seed files
 
-Read the template files from the skill's `templates/` directory (relative to this SKILL.md file: `templates/log.md` and `templates/bugs.md`) and write them verbatim to `wiki/log.md` and `wiki/bugs.md`.
+Read the template file from the skill's `templates/` directory (relative to this SKILL.md file: `templates/log.md`) and write it verbatim to `wiki/log.md`.
 
 The skill's templates directory is at: `~/.claude/skills/wiki-init/templates/`
 
@@ -110,7 +113,7 @@ Then ask: **"What are we working on?"**
 
 ## Idempotency Guarantee
 
-- Never overwrite `wiki/log.md`, `wiki/bugs.md`, or `wiki/CONTEXT.md` if they already exist (unless the user explicitly said "overwrite" in Step 1).
+- Never overwrite `wiki/log.md`, `wiki/CONTEXT.md`, or the `wiki/bugs/` folder if they already exist (unless the user explicitly said "overwrite" in Step 1).
 - Never duplicate the `# Wiki workflow` section in CLAUDE.md.
 - The `.gitkeep` files are safe to overwrite (they're empty).
 
@@ -119,7 +122,6 @@ Then ask: **"What are we working on?"**
 All templates are in `~/.claude/skills/wiki-init/templates/`:
 - `CONTEXT.md` — project context template with `{{placeholders}}`
 - `log.md` — seed session log
-- `bugs.md` — seed bug tracker
 - `CLAUDE.md.snippet` — rules block that makes bare keywords and auto-plan saving work
 
 ## What the Installed Rules Do
@@ -129,7 +131,7 @@ Once `CLAUDE.md` is updated, the following behaviors are active in every future 
 | Bare keyword | What Claude does |
 |---|---|
 | `log` | Appends a session summary entry to `wiki/log.md` |
-| `bug` | Adds a bug to the Open section of `wiki/bugs.md` |
+| `bug` | Creates a new `wiki/bugs/open/<slug>.md` file with frontmatter and body |
 | `status` | Lists active plans, last 5 log entries, open bugs |
 | `read` | Reads all wiki files and summarizes project state, then asks "What are we working on?" |
 

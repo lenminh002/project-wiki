@@ -48,11 +48,18 @@ When auto-saving a new plan, first scan `wiki/plans/active/` and `wiki/plans/don
 - When a plan's steps are all completed, ask me: "Plan [[name]] looks done. Move to done?" — only move it after I confirm
 - When moving a plan, do NOT rewrite `[[wikilinks]]` pointing to it — Obsidian resolves them by filename across subfolders
 
+## Plan Link Awareness Rule
+Before editing, updating, or marking a plan done, read every file referenced in its `related:` frontmatter and `## Related` section:
+- `depends-on` / `blocks` tags matter most — a change here can break those plans directly.
+- `builds-on` / `extends` tags mean changes may need to propagate forward into those plans.
+- If a change to the current plan invalidates or contradicts a linked plan, flag it to the user *before* applying the change, and ask whether that plan needs an update, a status change, or to be replaced.
+- After modifying a plan, update its `updated:` frontmatter; if a linked plan is now stale because of this change, ask: "Does [[linked-plan]] need updating too?"
+
 ## Read Rules
 When I say "read":
 1. Read `wiki/CONTEXT.md`
 2. Read `wiki/log.md`
-3. Read `wiki/bugs.md`
+3. Read all files in `wiki/bugs/open/`
 4. Read all files in `wiki/plans/active/`
 5. Summarize everything back to me: project context, recent progress, active plans, open bugs
 6. Then ask "What are we working on?"
@@ -61,7 +68,7 @@ When I say "read":
 When I say "status":
 1. List all files in `wiki/plans/active/`
 2. Summarize last 5 entries in `wiki/log.md`
-3. List open bugs from `wiki/bugs.md`
+3. List all files in `wiki/bugs/open/`
 4. Flag any stale plans (no `updated:` change in a while, or steps look complete) and ask if I want to move them to done or abandoned
 
 ## Log Rule
@@ -71,12 +78,63 @@ When I say "log":
 
 ## Bug Rule
 When I say "bug":
-- Ask me for a brief description if I haven't given one
-- Add it under `## Open` in `wiki/bugs.md` with the date and a short title
-- Format: `- [YYYY-MM-DD] **Title**: description`
+- Ask me for a title and description if I haven't given them.
+- Derive a lowercase-with-dashes filename from the title (e.g. `login-redirect-broken.md`).
+- Create `wiki/bugs/open/<slug>.md` with this frontmatter and body:
+  ```yaml
+  ---
+  status: open          # open | fixed
+  created: YYYY-MM-DD
+  updated: YYYY-MM-DD
+  severity:             # optional: low | medium | high | critical
+  tags: []
+  related: []           # [[wikilinks]] to related bugs or plans
+  ---
+  ```
+  ```markdown
+  ## Description
+  <what goes wrong>
+
+  ## Repro
+  <steps to reproduce>
+
+  ## Notes
+  <anything else>
+  ```
+
+## Bug Linking Rule
+When creating a new bug, scan `wiki/bugs/open/` and `wiki/bugs/fixed/` for related bugs (and `wiki/plans/active/` / `wiki/plans/done/` when relevant). Do this *before* asking the user how to debug — past context should inform the approach.
+- For each similar bug found in `wiki/bugs/fixed/`: read its `## Fix` section and summarize it to the user as: *"Similar bug [[old-bug]] was fixed by <one-line summary>. Worth checking if the same approach applies."*
+- Add a `## Related` section near the top of the new bug file with bullets using these tags: `duplicates`, `blocks`, `blocked-by`, `caused-by`, `related-to`, `regression-of`, `fixed-by`. Use `[[wikilinks]]` (filename only, no path/extension). Use `regression-of` if the new bug looks like the old one recurring.
+- Reciprocally update the linked file — append the inverse tag pointing back at the new bug.
+- If the new bug `duplicates` an open bug, ask: "Move [[old-bug]] to fixed (as duplicate)?"
+- Omit the `## Related` section entirely if no related bugs/plans exist.
+
+```markdown
+## Related
+- duplicates: [[other-bug]] — one-line why
+- regression-of: [[feature-plan]] — one-line why
+```
+
+## Bug Rules
+- One file per bug in `wiki/bugs/open/`, lowercase-with-dashes filename.
+- When a bug is fixed: move the file to `wiki/bugs/fixed/`, set `status: fixed`, add a `## Fix` section describing what was done.
+- Never delete bug files.
+- Never leave stale bugs in `open/` after they're fixed.
+- When moving a bug, do NOT rewrite `[[wikilinks]]` pointing to it — Obsidian resolves them by filename across subfolders.
+
+## Bug Link Awareness Rule
+Before working on, fixing, or closing a bug, read every file referenced in its `related:` frontmatter and `## Related` section:
+- `blocks` / `blocked-by` — establishes sequencing; don't close this bug if it's blocked, don't leave a downstream bug open if this fix unblocks it.
+- `caused-by` — the root cause may live in a different bug or plan; read that file first.
+- `regression-of` — a prior fix introduced this bug; read the `## Fix` of the old bug to understand what changed.
+- `duplicates` — don't fix the same thing twice; defer to the canonical bug.
+- If fixing this bug also resolves a linked open bug, ask: "Does [[linked-bug]] look resolved now too? Move it to fixed?"
+- If the fix touches code referenced by a linked plan, flag it: "This change may affect [[plan-name]]. Review it?"
 
 ## How to Start a Session
 1. Read `wiki/CONTEXT.md`
 2. Read `wiki/log.md`
 3. Scan `wiki/plans/active/`
-4. Then help me with whatever I ask
+4. Scan `wiki/bugs/open/`
+5. Then help me with whatever I ask

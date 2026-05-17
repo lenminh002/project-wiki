@@ -17,7 +17,6 @@ else
   curl -fsSL "$REPO/SKILL.md" -o "$SKILL_DIR/SKILL.md"
   curl -fsSL "$REPO/templates/CONTEXT.md"        -o "$SKILL_DIR/templates/CONTEXT.md"
   curl -fsSL "$REPO/templates/log.md"            -o "$SKILL_DIR/templates/log.md"
-  curl -fsSL "$REPO/templates/bugs.md"           -o "$SKILL_DIR/templates/bugs.md"
   curl -fsSL "$REPO/templates/CLAUDE.md.snippet" -o "$SKILL_DIR/templates/CLAUDE.md.snippet"
 fi
 

@@ -4,7 +4,7 @@
 
 A Claude Code skill that bootstraps a persistent project wiki with:
 
-- `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs.md`, `plans/`)
+- `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
 - Bare-keyword commands that work in every future session: `log`, `bug`, `status`, `read`
 - Auto-save of any multi-step plan to `wiki/plans/active/` — no prompting
 - Cross-linked plans with relationship tags (`builds-on`, `depends-on`, `replaces`, …)
@@ -30,8 +30,8 @@ irm https://cdn.jsdelivr.net/gh/lenminh002/project-wiki@main/install.ps1 | iex
 git clone https://github.com/lenminh002/project-wiki
 cd project-wiki
 ./install.sh        # macOS / Linux
-# or on Windows:
-# .\install.ps1
+# or
+.\install.ps1      # Windows
 ```
 
 ## Use
@@ -52,7 +52,6 @@ Claude will inspect your project, ask 4 questions (name, goal, stack, deploy tar
   templates/
     CONTEXT.md
     log.md
-    bugs.md
     CLAUDE.md.snippet
 ```
 
@@ -64,7 +63,9 @@ A trigger line is also added to `~/.claude/CLAUDE.md` so the skill auto-invokes 
 wiki/
   CONTEXT.md          — project name, goal, stack, conventions, folder tree
   log.md              — session-by-session log
-  bugs.md             — open and fixed bugs
+  bugs/
+    open/             — one .md file per open bug (YAML frontmatter + wikilinks)
+    fixed/            — fixed bugs (moved from open/, status: fixed)
   plans/
     active/           — plans in progress (with YAML frontmatter + wikilinks)
     done/             — completed plans
@@ -78,7 +79,7 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 | Say this | Claude does |
 |---|---|
 | `log` | Appends a session summary to `wiki/log.md` |
-| `bug` | Adds an issue to `wiki/bugs.md` |
+| `bug` | Creates a new file in `wiki/bugs/open/` with frontmatter and wikilink support |
 | `status` | Lists active plans, last 5 log entries, open bugs |
 | `read` | Reads all wiki files, summarizes context, asks "What are we working on?" |
 
@@ -89,6 +90,7 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 - New plans are cross-linked to related existing plans using `[[wikilinks]]`
 - Moving a plan to `done/` or `abandoned/` updates its `status:` frontmatter; wikilinks survive the move
 - Claude asks before moving a completed plan — never moves silently
+
 
 ## Uninstall
 

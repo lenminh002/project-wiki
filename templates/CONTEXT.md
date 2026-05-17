@@ -16,7 +16,9 @@ Deployed on: {{deployed_on}}
 wiki/
   CONTEXT.md        — this file
   log.md            — what happened each session
-  bugs.md           — issues and fixes
+  bugs/
+    open/           — one .md file per open bug
+    fixed/          — fixed bugs
   plans/active/     — plans currently in progress
   plans/done/       — completed plans
   plans/abandoned/  — plans we decided not to pursue
@@ -29,6 +31,6 @@ wiki/
 | Command  | What the agent does                                     |
 |----------|---------------------------------------------------------|
 | log      | Append what we just did to log.md                       |
-| bug      | Add issue to bugs.md                                    |
+| bug      | Create a new bug file in wiki/bugs/open/                |
 | status   | Summarize active plans, recent log, open bugs           |
 | read     | Read all wiki files and summarize full project context  |
