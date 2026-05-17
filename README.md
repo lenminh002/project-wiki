@@ -7,7 +7,7 @@ A Claude Code skill that bootstraps a persistent project wiki with:
 - `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
 - Bare-keyword commands that work in every future session: `log`, `bug`, `status`, `read`
 - Auto-save of any multi-step plan to `wiki/plans/active/` — no prompting
-- Cross-linked plans with relationship tags (`builds-on`, `depends-on`, `replaces`, …)
+- **AI auto-detects relationships** — Claude reads existing wiki content and automatically links new plans, bugs, and log entries to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, …)
 - Full Obsidian compatibility — open `wiki/` as a vault for graph view and backlinks
 
 ## Install
@@ -15,13 +15,13 @@ A Claude Code skill that bootstraps a persistent project wiki with:
 ### macOS / Linux
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/lenminh002/project-wiki@main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-irm https://cdn.jsdelivr.net/gh/lenminh002/project-wiki@main/install.ps1 | iex
+irm https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.ps1 | iex
 ```
 
 ### From a clone (any OS)
@@ -87,7 +87,8 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 
 - Any 3+-step plan is auto-saved to `wiki/plans/active/<feature>.md`
 - Plans get YAML frontmatter: `status`, `created`, `updated`, `tags`, `related`
-- New plans are cross-linked to related existing plans using `[[wikilinks]]`
+- **Claude automatically scans existing plans and bugs**, detects semantic relationships, and adds wikilinks — no manual linking needed
+- Relationship tags (`builds-on`, `depends-on`, `replaces`, `related-to`) are inferred from content and context
 - Moving a plan to `done/` or `abandoned/` updates its `status:` frontmatter; wikilinks survive the move
 - Claude asks before moving a completed plan — never moves silently
 
