@@ -7,7 +7,7 @@ A skill for agentic coding tools that builds a project wiki — persists context
 Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
 
 - `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
-- Optional project-local commands for future sessions: `/wiki-help`, `log`, `bug`, `status`, `read`
+- Optional project-local commands for future sessions: `wiki-help`, `log`, `bug`, `status`, `read`
 - Saves multi-step plans to `wiki/plans/active/` for continuity
 - **AI detects relationships** — the agent checks existing wiki content and links new plans and bugs to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, ...)
 - `codemap` generates `wiki/code/` entries for source files, including HTML/CSS links
@@ -76,7 +76,7 @@ wiki-init/
 
 | Say this | The agent does |
 |---|---|
-| `/wiki-help` | Shows the wiki command cheat sheet |
+| `wiki-help` | Shows the wiki command cheat sheet |
 | `log` | Appends a session summary to `wiki/log.md` |
 | `bug` | Creates a new file in `wiki/bugs/open/` with frontmatter and wikilink support |
 | `status` | Lists active plans, last 5 log entries, open bugs |

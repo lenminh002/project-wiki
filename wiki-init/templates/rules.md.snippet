@@ -57,7 +57,7 @@ wiki/
 
 | Command  | What the agent does                                     |
 |----------|---------------------------------------------------------|
-| /wiki-help | Show the wiki command cheat sheet                    |
+| wiki-help | Show the wiki command cheat sheet                     |
 | log      | Append what we just did to log.md                       |
 | bug      | Create a new bug file in wiki/bugs/open/                |
 | status   | Summarize active plans, recent log, open bugs           |
@@ -88,17 +88,17 @@ wiki/
 - Ready to start building
 ```
 
-6. Tell me: "Wiki scaffolded at `wiki/` — I'll keep it updated as we work."
+6. Tell me: "Wiki scaffolded at `wiki/` — I'll keep it updated as we work. Note: If any wiki command is confusing, type `wiki-help` for the command cheat sheet."
 
 # Wiki workflow
 
 ## Wiki Help Rule
-When I say `/wiki-help` or `wiki-help`, show this cheat sheet and do not modify files:
+When I say `wiki-help`, show this cheat sheet and do not modify files:
 
 | Say this | Use it when you want to... |
 |---|---|
 | `/wiki-init` | Scaffold `wiki/` and optionally install project-local wiki rules. |
-| `/wiki-help` | Show this command cheat sheet. |
+| `wiki-help` | Show this command cheat sheet. |
 | `read` | Load full wiki context, recent progress, active plans, and open bugs. |
 | `status` | Check active plans, recent log entries, open bugs, and stale work. |
 | `log` | Save a short summary of what happened in this session. |

@@ -1,12 +1,12 @@
 ---
 name: wiki-init
-description: "Scaffold a markdown-only wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and optional project-local rules in AGENTS.md so /wiki-help and bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
+description: "Scaffold a markdown-only wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and optional project-local rules in AGENTS.md so wiki-help and bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
 trigger: /wiki-init
 ---
 
 # /wiki-init
 
-Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linked plans, plan saving, `/wiki-help`, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions when the user allows project-local rules.
+Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linked plans, plan saving, `wiki-help`, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions when the user allows project-local rules.
 
 ## Safety Boundaries
 
@@ -24,7 +24,7 @@ Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linke
 
 ## Wiki Help Command
 
-If the user asks for `/wiki-help`, `wiki-help`, or help with wiki commands, do not scaffold or modify files. Respond with this cheat sheet:
+If the user asks for `wiki-help` or help with wiki commands, do not scaffold or modify files. Respond with this cheat sheet:
 
 ```markdown
 ## Wiki Commands
@@ -32,7 +32,7 @@ If the user asks for `/wiki-help`, `wiki-help`, or help with wiki commands, do n
 | Say this | Use it when you want to... |
 |---|---|
 | `/wiki-init` | Scaffold `wiki/` and optionally install project-local wiki rules. |
-| `/wiki-help` | Show this command cheat sheet. |
+| `wiki-help` | Show this command cheat sheet. |
 | `read` | Load full wiki context, recent progress, active plans, and open bugs. |
 | `status` | Check active plans, recent log entries, open bugs, and stale work. |
 | `log` | Save a short summary of what happened in this session. |
@@ -138,12 +138,16 @@ Write the result to `wiki/CONTEXT.md`.
 
 Read `templates/rules.md.snippet` from this skill's install directory.
 
-Ask: **"Write project-local wiki rules to AGENTS.md? This enables `/wiki-help` plus bare keywords like `log`, `bug`, `status`, `read`, and `codemap` in future sessions for this project."** with options: **Yes, write AGENTS.md** / **No, only scaffold wiki**.
+Ask: **"Write project-local wiki rules to AGENTS.md? This enables `wiki-help` plus bare keywords like `log`, `bug`, `status`, `read`, and `codemap` in future sessions for this project."** with options: **Yes, write AGENTS.md** / **No, only scaffold wiki**.
 
 If the user says Yes:
 - Check whether `./AGENTS.md` exists.
-  - If it contains `# Wiki workflow` already → skip (idempotent, don't duplicate).
-  - If it exists but lacks the block → append the snippet to the end.
+  - If it contains the current `templates/rules.md.snippet` exactly → skip because the wiki rules are already up to date.
+  - If it contains `# Wiki Bootstrap Rule` or `# Wiki workflow` but does not match the current snippet → tell the user the existing wiki rules look stale and ask whether to refresh them with the current `templates/rules.md.snippet`.
+    - If the user approves and `# Wiki Bootstrap Rule` exists → replace from `# Wiki Bootstrap Rule` through the end of the generated wiki rules block with the current snippet.
+    - If the user approves and only `# Wiki workflow` exists → replace from `# Wiki workflow` onward with the current snippet, because the older boundary is less certain and the user approved the replacement.
+    - If the user declines → leave `AGENTS.md` unchanged and report that project-local wiki rules were left stale.
+  - If it exists but lacks any wiki rules block → append the snippet to the end.
   - If it does not exist → create it with the snippet as its entire content.
 
 If the user says No:
@@ -155,7 +159,8 @@ If the user says No:
 Print a summary listing every file and folder created, and whether `AGENTS.md` was written, skipped, or declined, then add:
 
 > Your wiki is ready. Open `wiki/` as an Obsidian vault to get graph view of linked plans and backlinks.
-> If AGENTS.md was updated, `/wiki-help` and bare keywords `log`, `bug`, `status`, `read`, and `codemap` will work in future sessions for this project.
+> If AGENTS.md was updated, `wiki-help` and bare keywords `log`, `bug`, `status`, `read`, and `codemap` will work in future sessions for this project.
+> Note: If any wiki command is confusing, type `wiki-help` for the command cheat sheet.
 
 Then ask: **"What are we working on?"**
 
@@ -178,7 +183,7 @@ If the user approves writing `AGENTS.md`, the following behaviors are active in 
 
 | Command | What the agent does |
 |---|---|
-| `/wiki-help` | Shows the wiki command cheat sheet |
+| `wiki-help` | Shows the wiki command cheat sheet |
 | `log` | Appends a session summary entry to `wiki/log.md` |
 | `bug` | Creates a new `wiki/bugs/open/<slug>.md` file with frontmatter and body |
 | `status` | Lists active plans, last 5 log entries, open bugs |
