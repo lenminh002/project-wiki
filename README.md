@@ -2,9 +2,9 @@
 
 [![skills.sh](https://skills.sh/b/lenminh002/project-wiki)](https://skills.sh/lenminh002/project-wiki)
 
-A skill for agentic coding tools that builds a project wiki — persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. The project can then be visualized as a graph via Obsidian.
+Inspired by Andrej Karpathy, this is a skill for agentic coding tools that builds a project wiki that persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. The project can then be visualized as a graph via Obsidian, where you can see how everything connects. 
 
-Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
+Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Cursor, Claude Code, and more:
 
 - `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
 - Optional project-local commands for future sessions: `wiki-help`, `log`, `bug`, `status`, `read`
@@ -92,7 +92,7 @@ Re-run `codemap` anytime to refresh. When the agent edits a source file that alr
 
 ## Plan rules
 
-- Any 3+-step plan is saved to `wiki/plans/active/<feature>.md`
+- Any 3+ step plan is saved to `wiki/plans/active/<feature>.md`
 - Plans get YAML frontmatter: `status`, `created`, `updated`, `tags`, `related`
 - **The agent checks existing plans and bugs**, detects semantic relationships, and adds wikilinks
 - Relationship tags (`builds-on`, `depends-on`, `replaces`, `related-to`) are inferred from content and context
