@@ -1,8 +1,8 @@
-# project-wiki — project wiki skills for agentic coding tools
+# project-wiki — project wiki skill for agentic coding tools
 
 [![skills.sh](https://skills.sh/b/lenminh002/project-wiki)](https://skills.sh/lenminh002/project-wiki)
 
-A pair of skills for agentic coding tools that build a project wiki — persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. Obsidian compatible.
+A skill for agentic coding tools that builds a project wiki — persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. Obsidian compatible.
 
 Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
 
@@ -15,20 +15,18 @@ Bootstraps a persistent project wiki that works with **any agentic coding tool**
 
 ## Install
 
-Install the skills globally with the cross-agent skills CLI:
+Install the skill globally with the cross-agent skills CLI:
 
 ### macOS / Linux
 
 ```bash
 npx skills add lenminh002/project-wiki --skill wiki-init --global
-npx skills add lenminh002/project-wiki --skill wiki-help --global
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
 npx skills add lenminh002/project-wiki --skill wiki-init --global
-npx skills add lenminh002/project-wiki --skill wiki-help --global
 ```
 
 Then open any project in a supported agent and run:
@@ -72,8 +70,6 @@ wiki-init/
     CONTEXT.md
     log.md
     rules.md.snippet
-wiki-help/
-  SKILL.md
 ```
 
 ## Commands (active after AGENTS.md rules are approved)
@@ -115,14 +111,12 @@ Re-run `codemap` anytime to refresh. When the agent edits a source file that alr
 
 Remove `AGENTS.md` (or the `# Wiki Bootstrap Rule` / `# Wiki workflow` blocks from it) and remove the `wiki/` folder from your project.
 
-If you installed the persistent triggers with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` and `wiki-help` skills.
+If you installed the persistent trigger with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` skill.
 
 ```bash
 npx skills remove wiki-init --global
-npx skills remove wiki-help --global
 ```
 
 ```powershell
 npx skills remove wiki-init --global
-npx skills remove wiki-help --global
 ```

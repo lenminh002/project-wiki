@@ -22,6 +22,26 @@ Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linke
 /wiki-init    # run in any project root — no arguments needed
 ```
 
+## Wiki Help Command
+
+If the user asks for `/wiki-help`, `wiki-help`, or help with wiki commands, do not scaffold or modify files. Respond with this cheat sheet:
+
+```markdown
+## Wiki Commands
+
+| Say this | Use it when you want to... |
+|---|---|
+| `/wiki-init` | Scaffold `wiki/` and optionally install project-local wiki rules. |
+| `/wiki-help` | Show this command cheat sheet. |
+| `read` | Load full wiki context, recent progress, active plans, and open bugs. |
+| `status` | Check active plans, recent log entries, open bugs, and stale work. |
+| `log` | Save a short summary of what happened in this session. |
+| `bug` | Create a tracked bug note in `wiki/bugs/open/`. |
+| `codemap` | Generate `wiki/code/<path>.md` files for source files so Obsidian can graph the codebase. |
+
+Use `/wiki-init` first in a project that does not have `wiki/` yet. After AGENTS wiki rules are installed, the bare commands `read`, `status`, `log`, `bug`, and `codemap` work in future sessions.
+```
+
 ## What You Must Do When Invoked
 
 Follow these steps in order. Do not skip steps.
