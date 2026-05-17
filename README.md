@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/lenminh002/project-wiki)](https://skills.sh/lenminh002/project-wiki)
 
-A skill for agentic coding tools that builds a project wiki — persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. Obsidian compatible.
+A skill for agentic coding tools that builds a project wiki — persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. The project can then be visualized as a graph via Obsidian.
 
 Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
 
