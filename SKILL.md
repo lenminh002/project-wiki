@@ -1,12 +1,12 @@
 ---
 name: wiki-init
-description: "Scaffold a wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and install rules into project CLAUDE.md so bare keywords log/bug/status/read work in future sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
+description: "Scaffold a wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and install rules into project AGENTS.md by default so bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
 trigger: /wiki-init
 ---
 
 # /wiki-init
 
-Bootstrap a persistent project wiki with Obsidian-compatible linked plans, auto-plan saving, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across Claude sessions.
+Bootstrap a persistent project wiki with Obsidian-compatible linked plans, auto-plan saving, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions that read the project rules file.
 
 ## Usage
 
@@ -22,7 +22,7 @@ Follow these steps in order. Do not skip steps.
 
 Run `ls ./wiki 2>/dev/null` to see if a `wiki/` folder already exists.
 
-- If it exists: use `AskUserQuestion` to ask whether to skip (leave existing files untouched), overwrite (replace all files), or cancel. Do not proceed until the user answers. If they say skip or cancel, stop here.
+- If it exists: ask the user whether to skip (leave existing files untouched), overwrite (replace all files), or cancel. Do not proceed until the user answers. If they say skip or cancel, stop here.
 - If it does not exist: continue.
 
 ### Step 2 — Create folder structure
@@ -46,17 +46,18 @@ Write a `.gitkeep` file into each of the `bugs/` and `plans/` subdirectories so 
 
 Read the template file from the skill's `templates/` directory (relative to this SKILL.md file: `templates/log.md`) and write it verbatim to `wiki/log.md`.
 
-The skill's templates directory is at: `~/.claude/skills/wiki-init/templates/`
+The skill's templates directory is relative to this `SKILL.md` file.
 
 ### Step 4 — Inspect the project
 
-Run `ls -1` in the project root. Also attempt to read these files if they exist (do not error if missing):
+Run `ls -1A` in the project root. Also attempt to read these files if they exist (do not error if missing):
 - `package.json`
 - `pyproject.toml`
 - `Cargo.toml`
 - `go.mod`
 - `README.md`
 - `.gitignore`
+- `vercel.json`, `netlify.toml`, `fly.toml`, `render.yaml`, `railway.toml`, `Dockerfile`, `docker-compose.yml`
 
 From what you find, infer:
 - **Stack**: language, framework, major dependencies
@@ -65,18 +66,28 @@ From what you find, infer:
 
 Prepare these three values to insert into CONTEXT.md.
 
-### Step 5 — Ask the user for project metadata
+### Step 5 — Derive project metadata from scan (no questions)
 
-Use `AskUserQuestion` to collect the following in a single call (up to 4 questions):
+Using only what you found in Step 4, determine:
 
-1. Project name
-2. Project goal (one sentence)
-3. Stack — show what you detected and ask them to confirm or correct
-4. Where it's deployed (e.g. Vercel, AWS, local only, not yet)
+1. **Project name** — in order of preference: `package.json` `.name`, `pyproject.toml` `[project] name`, `go.mod` module path (last segment), README first `#` heading, current directory name.
+2. **Project goal** — in order of preference: `package.json` `.description`, `pyproject.toml` `[project] description`, first non-heading paragraph in README, or `"(not specified)"` if none found.
+3. **Stack** — what you already inferred in Step 4.
+4. **Deployed on** — check for these files and map to a label:
+   - `vercel.json` or `.vercel/` → "Vercel"
+   - `netlify.toml` or `netlify.yml` → "Netlify"
+   - `fly.toml` → "Fly.io"
+   - `render.yaml` → "Render"
+   - `Dockerfile` or `docker-compose.yml` → "Docker"
+   - `.github/workflows/` containing `deploy` → "GitHub Actions"
+   - `railway.toml` or `railway.json` → "Railway"
+   - Nothing found → "not yet"
+
+Do not ask the user anything in this step. Proceed directly to Step 6.
 
 ### Step 6 — Write wiki/CONTEXT.md
 
-Read `~/.claude/skills/wiki-init/templates/CONTEXT.md`.
+Read `templates/CONTEXT.md` from this skill's install directory.
 
 Replace the following placeholders with real values:
 - `{{name}}` → project name from Step 5
@@ -90,7 +101,7 @@ Write the result to `wiki/CONTEXT.md`.
 
 ### Step 7 — Write the wiki rules to the project rules file
 
-Read `~/.claude/skills/wiki-init/templates/rules.md.snippet`.
+Read `templates/rules.md.snippet` from this skill's install directory.
 
 **Default: write to `./AGENTS.md`** (read by Codex CLI, Aider, Jules, recent Cursor, and many other agentic tools).
 
@@ -99,7 +110,7 @@ Read `~/.claude/skills/wiki-init/templates/rules.md.snippet`.
   - If it exists but lacks the block → append the snippet to the end.
   - If it does not exist → create it with the snippet as its entire content.
 
-Then use `AskUserQuestion` to ask: **"Also write the rules to CLAUDE.md? (This lets bare keywords work in Claude Code sessions in this project.)"** with options: **Yes** / **No (AGENTS.md is enough)**.
+Then ask: **"Also write the rules to CLAUDE.md? (This lets bare keywords work in Claude Code sessions in this project.)"** with options: **Yes** / **No (AGENTS.md is enough)**.
 
 If the user says Yes:
 - Check whether `./CLAUDE.md` exists.
@@ -124,16 +135,16 @@ Then ask: **"What are we working on?"**
 
 ## Templates Location
 
-All templates are in `~/.claude/skills/wiki-init/templates/`:
+All templates are in the `templates/` directory next to this `SKILL.md`:
 - `CONTEXT.md` — project context template with `{{placeholders}}`
 - `log.md` — seed session log
 - `rules.md.snippet` — rules block that makes bare keywords and auto-plan saving work
 
 ## What the Installed Rules Do
 
-Once `CLAUDE.md` is updated, the following behaviors are active in every future Claude session in this project — no skill invocation needed:
+Once the project rules file is updated, the following behaviors are active in every future agent session that reads it — no skill invocation needed:
 
-| Bare keyword | What Claude does |
+| Bare keyword | What the agent does |
 |---|---|
 | `log` | Appends a session summary entry to `wiki/log.md` |
 | `bug` | Creates a new `wiki/bugs/open/<slug>.md` file with frontmatter and body |
@@ -143,4 +154,4 @@ Once `CLAUDE.md` is updated, the following behaviors are active in every future 
 
 **Auto-plan rule**: any response with 3+ steps for building something is automatically saved to `wiki/plans/active/<feature>.md` with YAML frontmatter (`status`, `created`, `updated`, `tags`, `related`) — no need to ask.
 
-**Plan linking**: when saving a new plan, Claude scans existing plans for related ones and cross-links them using `[[wikilinks]]` and relationship tags (`builds-on`, `depends-on`, `replaces`, etc.). These wikilinks work natively in Obsidian's graph view and backlinks panel.
+**Plan linking**: when saving a new plan, the agent scans existing plans for related ones and cross-links them using `[[wikilinks]]` and relationship tags (`builds-on`, `depends-on`, `replaces`, etc.). These wikilinks work natively in Obsidian's graph view and backlinks panel.

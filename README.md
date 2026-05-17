@@ -12,84 +12,37 @@ Bootstraps a persistent project wiki that works with **any agentic coding tool**
 
 ---
 
-## Other agentic coding tools (Codex CLI, Aider, Cursor, Jules, ...)
+## Install
 
-Run the standalone bootstrap script directly inside your project:
+Install the skill globally with the cross-agent skills CLI:
 
 ### macOS / Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lenminh002/project-wiki/main/wiki-init.sh | bash
+npx skills add lenminh002/project-wiki --skill wiki-init --global
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/lenminh002/project-wiki/main/wiki-init.ps1 | iex
+npx skills add lenminh002/project-wiki --skill wiki-init --global
 ```
 
-### From a clone (any OS)
+To target specific agents explicitly:
 
 ```bash
-git clone https://github.com/lenminh002/project-wiki
-cd project-wiki
-bash wiki-init.sh   # macOS / Linux
-# or
-pwsh wiki-init.ps1  # Windows
+npx skills add lenminh002/project-wiki --skill wiki-init --global --agent codex --agent claude-code
 ```
 
-The script asks 4 questions, scaffolds `wiki/`, and writes the rules to **`AGENTS.md`** by default. It then asks if you also want to write them to `CLAUDE.md` (useful if you switch between tools).
-
-`AGENTS.md` is the cross-tool standard read by: **Codex CLI, Aider, Jules, recent Cursor**, and any other agent that follows the AGENTS.md convention. Once it's there, bare keywords (`log`, `bug`, `status`, `read`) work automatically in every session.
-
----
-
-## Claude Code
-
-Install the `/wiki-init` slash command skill:
-
-### macOS / Linux
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.sh | bash
-```
-
-### Windows (PowerShell)
-
-```powershell
-irm https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.ps1 | iex
-```
-
-### From a clone (any OS)
-
-```bash
-git clone https://github.com/lenminh002/project-wiki
-cd project-wiki
-./install.sh        # macOS / Linux
-# or
-.\install.ps1       # Windows
-```
-
-Open any project in Claude Code and run:
+Then open any project in a supported agent and run:
 
 ```
 /wiki-init
 ```
 
-Claude will inspect your project, ask 4 questions (name, goal, stack, deploy target), scaffold the wiki folder, and write the rules to `AGENTS.md` (and optionally `CLAUDE.md`) so bare keywords persist across sessions.
+The agent auto-detects your project's name, stack, and deploy target, scaffolds `wiki/`, and writes the rules to `AGENTS.md` (and optionally `CLAUDE.md` for Claude Code).
 
-## What gets installed (Claude Code skill)
-
-```
-~/.claude/skills/wiki-init/
-  SKILL.md
-  templates/
-    CONTEXT.md
-    log.md
-    rules.md.snippet
-```
-
-A trigger line is also added to `~/.claude/CLAUDE.md` so the skill auto-invokes when you type `/wiki-init`.
+---
 
 ## Wiki folder structure
 
@@ -144,14 +97,14 @@ Re-run `codemap` anytime to refresh. When the agent edits a source file that alr
 
 ## Uninstall
 
-macOS / Linux:
+Remove `AGENTS.md` (or the `# Wiki Bootstrap Rule` / `# Wiki workflow` blocks from it) and delete the `wiki/` folder from your project.
+
+If you installed the persistent trigger with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` skill.
+
 ```bash
-rm -rf ~/.claude/skills/wiki-init
-# then remove the # wiki-init block from ~/.claude/CLAUDE.md
+npx skills remove wiki-init --global
 ```
 
-Windows (PowerShell):
 ```powershell
-Remove-Item -Recurse -Force "$HOME\.claude\skills\wiki-init"
-# then remove the # wiki-init block from $HOME\.claude\CLAUDE.md
+npx skills remove wiki-init --global
 ```
