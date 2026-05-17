@@ -1,49 +1,34 @@
-# wiki-init — project wiki for agentic coding tools
+# project-wiki — project wiki skills for agentic coding tools
 
 [![skills.sh](https://skills.sh/b/lenminh002/project-wiki)](https://skills.sh/lenminh002/project-wiki)
+
+A pair of skills for agentic coding tools that build a project wiki — persists context across sessions, auto-saves plans, tracks bugs, logs progress, and maps your codebase. Obsidian compatible.
 
 Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
 
 - `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
-- Optional project-local bare-keyword commands for future sessions: `log`, `bug`, `status`, `read`
+- Optional project-local commands for future sessions: `/wiki-help`, `log`, `bug`, `status`, `read`
 - Saves multi-step plans to `wiki/plans/active/` for continuity
 - **AI detects relationships** — the agent checks existing wiki content and links new plans and bugs to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, ...)
 - `codemap` generates `wiki/code/` entries for source files, including HTML/CSS links
 - Full Obsidian compatibility — open `wiki/` as a vault for graph view and backlinks
 
-## Security
-
-- Markdown-only skill: no runtime dependencies, shell scripts, package installs, usage tracking, or network calls.
-- Installation uses only the skills CLI command shown below.
-- No install scripts are shipped by this repository.
-- The skill does not fetch remote content after installation.
-- Writes are limited to `wiki/` and optional project-local `AGENTS.md`.
-- The agent asks before replacing existing wiki content, writing `AGENTS.md`, or removing stale `wiki/code/` files.
-- Project inspection is limited to non-secret metadata files; `.env*`, credential files, private keys, and token files are out of scope.
-- Project files are treated as untrusted input: contents are summarized as data, not followed as instructions.
-
----
-
 ## Install
 
-Install the skill globally with the cross-agent skills CLI:
+Install the skills globally with the cross-agent skills CLI:
 
 ### macOS / Linux
 
 ```bash
 npx skills add lenminh002/project-wiki --skill wiki-init --global
+npx skills add lenminh002/project-wiki --skill wiki-help --global
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
 npx skills add lenminh002/project-wiki --skill wiki-init --global
-```
-
-To target specific agents explicitly:
-
-```bash
-npx skills add lenminh002/project-wiki --skill wiki-init --global --agent codex
+npx skills add lenminh002/project-wiki --skill wiki-help --global
 ```
 
 Then open any project in a supported agent and run:
@@ -53,6 +38,8 @@ Then open any project in a supported agent and run:
 ```
 
 The agent detects your project's name, stack, and deploy target from non-secret metadata files, scaffolds `wiki/`, and asks before writing optional project-local rules to `AGENTS.md`.
+
+Run `/wiki-help` anytime for a quick command cheat sheet.
 
 Existing projects with an older `# Wiki workflow` block should rerun `/wiki-init` or manually refresh that block to get the latest safety and `codemap` rules.
 
@@ -76,10 +63,24 @@ wiki/
 
 Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks panel.
 
+## Skill repository layout
+
+```
+wiki-init/
+  SKILL.md
+  templates/
+    CONTEXT.md
+    log.md
+    rules.md.snippet
+wiki-help/
+  SKILL.md
+```
+
 ## Commands (active after AGENTS.md rules are approved)
 
 | Say this | The agent does |
 |---|---|
+| `/wiki-help` | Shows the wiki command cheat sheet |
 | `log` | Appends a session summary to `wiki/log.md` |
 | `bug` | Creates a new file in `wiki/bugs/open/` with frontmatter and wikilink support |
 | `status` | Lists active plans, last 5 log entries, open bugs |
@@ -114,12 +115,14 @@ Re-run `codemap` anytime to refresh. When the agent edits a source file that alr
 
 Remove `AGENTS.md` (or the `# Wiki Bootstrap Rule` / `# Wiki workflow` blocks from it) and remove the `wiki/` folder from your project.
 
-If you installed the persistent trigger with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` skill.
+If you installed the persistent triggers with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` and `wiki-help` skills.
 
 ```bash
 npx skills remove wiki-init --global
+npx skills remove wiki-help --global
 ```
 
 ```powershell
 npx skills remove wiki-init --global
+npx skills remove wiki-help --global
 ```

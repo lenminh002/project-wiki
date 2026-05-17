@@ -1,12 +1,12 @@
 ---
 name: wiki-init
-description: "Scaffold a markdown-only wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and optional project-local rules in AGENTS.md so bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
+description: "Scaffold a markdown-only wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and optional project-local rules in AGENTS.md so /wiki-help and bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
 trigger: /wiki-init
 ---
 
 # /wiki-init
 
-Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linked plans, plan saving, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions when the user allows project-local rules.
+Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linked plans, plan saving, `/wiki-help`, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions when the user allows project-local rules.
 
 ## Safety Boundaries
 
@@ -118,7 +118,7 @@ Write the result to `wiki/CONTEXT.md`.
 
 Read `templates/rules.md.snippet` from this skill's install directory.
 
-Ask: **"Write project-local wiki rules to AGENTS.md? This enables bare keywords like `log`, `bug`, `status`, `read`, and `codemap` in future sessions for this project."** with options: **Yes, write AGENTS.md** / **No, only scaffold wiki**.
+Ask: **"Write project-local wiki rules to AGENTS.md? This enables `/wiki-help` plus bare keywords like `log`, `bug`, `status`, `read`, and `codemap` in future sessions for this project."** with options: **Yes, write AGENTS.md** / **No, only scaffold wiki**.
 
 If the user says Yes:
 - Check whether `./AGENTS.md` exists.
@@ -135,7 +135,7 @@ If the user says No:
 Print a summary listing every file and folder created, and whether `AGENTS.md` was written, skipped, or declined, then add:
 
 > Your wiki is ready. Open `wiki/` as an Obsidian vault to get graph view of linked plans and backlinks.
-> If AGENTS.md was updated, bare keywords `log`, `bug`, `status`, `read`, and `codemap` will work in future sessions for this project.
+> If AGENTS.md was updated, `/wiki-help` and bare keywords `log`, `bug`, `status`, `read`, and `codemap` will work in future sessions for this project.
 
 Then ask: **"What are we working on?"**
 
@@ -156,8 +156,9 @@ All templates are in the `templates/` directory next to this `SKILL.md`:
 
 If the user approves writing `AGENTS.md`, the following behaviors are active in future agent sessions that read it — no skill invocation needed:
 
-| Bare keyword | What the agent does |
+| Command | What the agent does |
 |---|---|
+| `/wiki-help` | Shows the wiki command cheat sheet |
 | `log` | Appends a session summary entry to `wiki/log.md` |
 | `bug` | Creates a new `wiki/bugs/open/<slug>.md` file with frontmatter and body |
 | `status` | Lists active plans, last 5 log entries, open bugs |

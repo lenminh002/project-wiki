@@ -35,6 +35,7 @@ wiki/
 
 | Command  | What the agent does                                     |
 |----------|---------------------------------------------------------|
+| /wiki-help | Show the wiki command cheat sheet                    |
 | log      | Append what we just did to log.md                       |
 | bug      | Create a new bug file in wiki/bugs/open/                |
 | status   | Summarize active plans, recent log, open bugs           |
