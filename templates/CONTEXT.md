@@ -27,7 +27,7 @@ wiki/
   code/             — one .md per source file (run `codemap` to generate)
 ```
 
-`wiki/code/` mirrors the project folder structure. Each file lists the source file's purpose, functions, and imports as `[[wikilinks]]` to other code files — so opening `wiki/` in Obsidian shows the codebase as a navigable dependency graph alongside plans and bugs.
+`wiki/code/` mirrors the project folder structure. Each file lists the source file's purpose, functions/sections, and imports or asset links as `[[wikilinks]]` to other source files — including HTML and CSS — so opening `wiki/` in Obsidian shows the codebase as a navigable dependency graph alongside plans and bugs.
 
 > Open the `wiki/` folder as an Obsidian vault to get graph view of linked plans, backlinks panel, and Dataview queries across all plan frontmatter.
 

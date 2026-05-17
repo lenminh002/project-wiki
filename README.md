@@ -1,13 +1,14 @@
 # wiki-init — project wiki for agentic coding tools
 
-[![installs](https://img.shields.io/badge/dynamic/json?url=https://api.counterapi.dev/v1/lenminh/wiki-init&query=$.count&label=installs&color=blue)](https://api.counterapi.dev/v1/lenminh/wiki-init)
+[![skills.sh](https://skills.sh/b/lenminh002/project-wiki)](https://skills.sh/lenminh002/project-wiki)
 
 Bootstraps a persistent project wiki that works with **any agentic coding tool** — Codex CLI, Aider, Jules, Cursor, Claude Code, and more:
 
 - `wiki/` folder (`CONTEXT.md`, `log.md`, `bugs/`, `plans/`)
 - Bare-keyword commands that work in every future session: `log`, `bug`, `status`, `read`
 - Auto-save of any multi-step plan to `wiki/plans/active/` — no prompting
-- **AI auto-detects relationships** — the agent reads existing wiki content and automatically links new plans, bugs, and log entries to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, ...)
+- **AI auto-detects relationships** — the agent reads existing wiki content and automatically links new plans and bugs to related ones using `[[wikilinks]]` and tags (`builds-on`, `depends-on`, `replaces`, ...)
+- `codemap` generates `wiki/code/` entries for source files, including HTML/CSS links
 - Full Obsidian compatibility — open `wiki/` as a vault for graph view and backlinks
 
 ---
@@ -57,6 +58,7 @@ wiki/
     active/           — plans in progress (with YAML frontmatter + wikilinks)
     done/             — completed plans
     abandoned/        — plans we decided not to pursue
+  code/               — generated code graph files from `codemap`
 ```
 
 Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks panel for free.
@@ -69,7 +71,7 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 | `bug` | Creates a new file in `wiki/bugs/open/` with frontmatter and wikilink support |
 | `status` | Lists active plans, last 5 log entries, open bugs |
 | `read` | Reads all wiki files, summarizes context, asks "What are we working on?" |
-| `codemap` | Generates one `wiki/code/<path>.md` per source file — purpose, functions, and import wikilinks |
+| `codemap` | Generates one `wiki/code/<path>.md` per source file — purpose, functions/sections, and import/link wikilinks |
 
 ## Code graph (`codemap`)
 
@@ -77,12 +79,12 @@ Type `codemap` in any session and the agent will:
 
 1. Ask which folder(s) to scan
 2. Walk the chosen folders (respecting `.gitignore`, skipping `node_modules/`, `dist/`, etc.)
-3. Write one `wiki/code/<mirrored-path>.md` per source file, each containing:
+3. Write one `wiki/code/<mirrored-path>.md` per source file, including HTML and CSS, each containing:
    - **Purpose** — one-line summary of what the file does
-   - **Functions** — bulleted list with one-line descriptions
-   - **Imports** — in-repo imports as `[[wikilinks]]`; third-party imports as `external: package-name`
+   - **Functions / Sections** — bulleted list with one-line descriptions
+   - **Imports / Links** — in-repo imports, local HTML links, local scripts/stylesheets/assets, CSS `@import`, and CSS `url(...)` as `[[wikilinks]]`; third-party imports/CDNs as `external: package-name`
 
-Open `wiki/` as an Obsidian vault and the graph view shows your **entire codebase as a dependency graph** — scripts as nodes, imports as edges — sitting alongside your plans and bug nodes.
+Open `wiki/` as an Obsidian vault and the graph view shows your **entire codebase as a dependency graph** — source files as nodes, imports and local links as edges — sitting alongside your plans and bug nodes.
 
 Re-run `codemap` anytime to refresh. When the agent edits a source file that already has a `wiki/code/` entry, it automatically keeps that entry up to date.
 

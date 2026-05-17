@@ -48,7 +48,7 @@ wiki/
   code/             — one .md per source file (run `codemap` to generate)
 \`\`\`
 
-`wiki/code/` mirrors the project folder structure. Each file lists the source file's purpose, functions, and imports as `[[wikilinks]]` to other code files — so opening `wiki/` in Obsidian shows the codebase as a navigable dependency graph alongside plans and bugs.
+`wiki/code/` mirrors the project folder structure. Each file lists the source file's purpose, functions/sections, and imports or asset links as `[[wikilinks]]` to other source files — including HTML and CSS — so opening `wiki/` in Obsidian shows the codebase as a navigable dependency graph alongside plans and bugs.
 
 > Open the `wiki/` folder as an Obsidian vault to get graph view of linked plans, backlinks panel, and Dataview queries across all plan frontmatter.
 
@@ -220,7 +220,7 @@ Before working on, fixing, or closing a bug, read every file referenced in its `
 When I say "codemap":
 
 1. **Ask scope.** Ask me which folder(s) to scan (e.g. `src/`, `lib/`, or `all`). List the top-level folders you detect as suggested options.
-2. **Build the file list.** Walk the chosen folder(s). Skip: `node_modules/`, `.venv/`, `venv/`, `dist/`, `build/`, `.git/`, `vendor/`, `target/`, `__pycache__/`. Include source extensions: `.py .js .jsx .ts .tsx .go .rs .java .rb .php .swift .kt .c .cc .cpp .h .hpp .cs .scala .ex .exs`.
+2. **Build the file list.** Walk the chosen folder(s). Skip: `node_modules/`, `.venv/`, `venv/`, `dist/`, `build/`, `.git/`, `vendor/`, `target/`, `__pycache__/`. Include source extensions: `.html .htm .css .scss .sass .less .py .js .jsx .ts .tsx .go .rs .java .rb .php .swift .kt .c .cc .cpp .h .hpp .cs .scala .ex .exs`.
 3. **Cap check.** If more than 50 files match, show the count and ask "Scan all N files? [y/N]". Stop if declined.
 4. **Generate one `.md` per source file.** Write to `wiki/code/<mirrored-path>.md`. Example: `src/auth/login.ts` → `wiki/code/src/auth/login.md`. Each file:
    ```yaml
@@ -235,23 +235,27 @@ When I say "codemap":
    ## Purpose
    <one-line summary of what this file does>
 
-   ## Functions
+   ## Functions / Sections
    - `funcName(args)` — one-line description
-   (omit section if file has no functions)
+   - `selector-or-section` — one-line description for HTML/CSS structure
+   (omit section if file has no functions or meaningful HTML/CSS sections)
 
-   ## Imports
+   ## Imports / Links
    - [[other-file]] — one-line why (for in-repo imports — use basename wikilink)
+   - [[stylesheet]] — one-line why (for local HTML `<link href>` or CSS `@import`)
+   - [[script]] — one-line why (for local HTML `<script src>`)
+   - [[asset]] — one-line why (for local HTML assets or CSS `url(...)` targets that are part of the project)
    - external: package-name — one-line why (for third-party/stdlib imports)
-   (omit section if file has no imports)
+   (omit section if file has no imports or links)
    ```
-   Resolve in-repo imports to `[[basename]]` wikilinks (filename only, no path, no extension). Third-party and stdlib imports get an `external:` prefix — no wikilink — so they don't create false graph edges.
+   Resolve in-repo imports and local HTML/CSS links to `[[basename]]` wikilinks (filename only, no path, no extension). For HTML, inspect local `<script src>`, `<link href>`, `<a href>`, `<img src>`, and similar source/href attributes. For CSS-like files, inspect `@import` and `url(...)`. Third-party, CDN, stdlib, absolute web URLs, `mailto:`, `tel:`, hash-only anchors, and data URIs get an `external:` prefix or are omitted when they do not represent a project file — no wikilink — so they don't create false graph edges.
 5. **Stale cleanup.** Inside the scanned folder only: delete any `wiki/code/<path>.md` whose source file no longer exists. List removals in the summary.
 6. **Summarize.** Report: files mapped, files removed, location (`wiki/code/`), and remind me to open `wiki/` in Obsidian for graph view.
 
 ## Codemap Edit-Awareness Rule
 When you edit a source file that already has a corresponding `wiki/code/<path>.md`:
 - After making the edit, re-read the updated source file.
-- Refresh the `## Functions` and `## Imports` sections of its `wiki/code/<path>.md` to match the new state.
+- Refresh the `## Functions / Sections` and `## Imports / Links` sections of its `wiki/code/<path>.md` to match the new state.
 - Update the `updated:` frontmatter date.
 - Do this silently — no need to ask. If no `wiki/code/` file exists for it yet, skip (don't create one; the user runs `codemap` for that).
 
