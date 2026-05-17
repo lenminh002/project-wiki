@@ -25,7 +25,13 @@ related: []           # list of [[wikilinks]] to related plans
 ```
 
 ## Plan Linking Rule
-When auto-saving a new plan, first scan `wiki/plans/active/` and `wiki/plans/done/` for related plans (topic overlap, or user says "build on / extend / replace / depends on"). If any are found:
+When auto-saving a new plan, first scan `wiki/plans/active/` and `wiki/plans/done/` for related plans (topic overlap, or user says "build on / extend / replace / depends on").
+
+**If a plan in `wiki/plans/active/` is the same topic or surprisingly similar** (same feature, same area, overlapping steps): stop and ask the user — *"[[existing-plan]] looks very similar to this. Update it, or create a new plan?"*
+- If **update**: overwrite the existing plan file, update its `updated:` frontmatter, and stop — do not create a new file.
+- If **new**: proceed to create the new plan file as normal.
+
+If any related (but not identical) plans are found:
 - Add a `## Related` section near the top of the new plan with bullets using these tags: `builds-on`, `extends`, `replaces`, `depends-on`, `conflicts-with`, `supersedes`. Use `[[wikilinks]]` (filename only, no path/extension).
 - Reciprocally update the related plan file — append the inverse tag pointing back at the new plan.
 - If the new plan `replaces` or `supersedes` an active plan, ask the user: "Move [[old-plan]] to done or abandoned?"
@@ -131,6 +137,45 @@ Before working on, fixing, or closing a bug, read every file referenced in its `
 - `duplicates` — don't fix the same thing twice; defer to the canonical bug.
 - If fixing this bug also resolves a linked open bug, ask: "Does [[linked-bug]] look resolved now too? Move it to fixed?"
 - If the fix touches code referenced by a linked plan, flag it: "This change may affect [[plan-name]]. Review it?"
+
+## Codemap Rule
+When I say "codemap":
+
+1. **Ask scope.** Ask me which folder(s) to scan (e.g. `src/`, `lib/`, or `all`). List the top-level folders you detect as suggested options.
+2. **Build the file list.** Walk the chosen folder(s). Skip: `node_modules/`, `.venv/`, `venv/`, `dist/`, `build/`, `.git/`, `vendor/`, `target/`, `__pycache__/`. Include source extensions: `.py .js .jsx .ts .tsx .go .rs .java .rb .php .swift .kt .c .cc .cpp .h .hpp .cs .scala .ex .exs`.
+3. **Cap check.** If more than 50 files match, show the count and ask "Scan all N files? [y/N]". Stop if declined.
+4. **Generate one `.md` per source file.** Write to `wiki/code/<mirrored-path>.md`. Example: `src/auth/login.ts` → `wiki/code/src/auth/login.md`. Each file:
+   ```yaml
+   ---
+   status: code-map
+   path: <relative path to source file>
+   language: <inferred from extension>
+   updated: YYYY-MM-DD
+   ---
+   ```
+   ```markdown
+   ## Purpose
+   <one-line summary of what this file does>
+
+   ## Functions
+   - `funcName(args)` — one-line description
+   (omit section if file has no functions)
+
+   ## Imports
+   - [[other-file]] — one-line why (for in-repo imports — use basename wikilink)
+   - external: package-name — one-line why (for third-party/stdlib imports)
+   (omit section if file has no imports)
+   ```
+   Resolve in-repo imports to `[[basename]]` wikilinks (filename only, no path, no extension). Third-party and stdlib imports get an `external:` prefix — no wikilink — so they don't create false graph edges.
+5. **Stale cleanup.** Inside the scanned folder only: delete any `wiki/code/<path>.md` whose source file no longer exists. List removals in the summary.
+6. **Summarize.** Report: files mapped, files removed, location (`wiki/code/`), and remind me to open `wiki/` in Obsidian for graph view.
+
+## Codemap Edit-Awareness Rule
+When you edit a source file that already has a corresponding `wiki/code/<path>.md`:
+- After making the edit, re-read the updated source file.
+- Refresh the `## Functions` and `## Imports` sections of its `wiki/code/<path>.md` to match the new state.
+- Update the `updated:` frontmatter date.
+- Do this silently — no need to ask. If no `wiki/code/` file exists for it yet, skip (don't create one; the user runs `codemap` for that).
 
 ## How to Start a Session
 1. Read `wiki/CONTEXT.md`

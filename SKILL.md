@@ -139,6 +139,7 @@ Once `CLAUDE.md` is updated, the following behaviors are active in every future 
 | `bug` | Creates a new `wiki/bugs/open/<slug>.md` file with frontmatter and body |
 | `status` | Lists active plans, last 5 log entries, open bugs |
 | `read` | Reads all wiki files and summarizes project state, then asks "What are we working on?" |
+| `codemap` | Asks which folder(s) to scan, then generates one `wiki/code/<path>.md` per source file with purpose, functions, and import wikilinks — viewable as a code dependency graph in Obsidian |
 
 **Auto-plan rule**: any response with 3+ steps for building something is automatically saved to `wiki/plans/active/<feature>.md` with YAML frontmatter (`status`, `created`, `updated`, `tags`, `related`) — no need to ask.
 

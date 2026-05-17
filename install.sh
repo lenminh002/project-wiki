@@ -4,13 +4,20 @@ set -e
 SKILL_DIR="$HOME/.claude/skills/wiki-init"
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 REPO="https://raw.githubusercontent.com/lenminh002/project-wiki/main"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" || SCRIPT_DIR=""
+fi
+IS_LOCAL=false
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/SKILL.md" ] && [ -f "$SCRIPT_DIR/templates/rules.md.snippet" ]; then
+  IS_LOCAL=true
+fi
 
 echo "Installing wiki-init skill..."
 
 mkdir -p "$SKILL_DIR/templates"
 
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$SCRIPT_DIR/SKILL.md" ] && [ -f "$SCRIPT_DIR/templates/rules.md.snippet" ]; then
+if [ "$IS_LOCAL" = true ]; then
   cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
   cp -R "$SCRIPT_DIR/templates/." "$SKILL_DIR/templates/"
 else
@@ -30,7 +37,7 @@ When the user types \`/wiki-init\`, invoke the Skill tool with \`skill: \"wiki-i
 if [ ! -f "$CLAUDE_MD" ]; then
   echo "$TRIGGER_BLOCK" > "$CLAUDE_MD"
   echo "  Created $CLAUDE_MD with wiki-init trigger"
-elif grep -qE "^# wiki-init$" "$CLAUDE_MD"; then
+elif grep -qF "# wiki-init" "$CLAUDE_MD"; then
   echo "  Trigger already present in $CLAUDE_MD — skipping"
 else
   echo "" >> "$CLAUDE_MD"

@@ -7,10 +7,31 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/lenminh002/project-wiki/main"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 PROJECT_DIR="$(pwd)"
 
-# ── helpers ──────────────────────────────────────────────────────────────────
+# Detect clone-local run vs remote pipe: only use local templates if this
+# script was invoked as a real file (not piped through bash) and the
+# templates directory actually sits next to it.
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ "${BASH_SOURCE[0]}" != "bash" ]; then
+  _candidate="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+  if [ -f "$_candidate/templates/rules.md.snippet" ]; then
+    SCRIPT_DIR="$_candidate"
+  fi
+  unset _candidate
+fi
+
+# helpers 
+
+# Determine the best input source: prefer /dev/tty (works even when stdin is
+# a pipe) but fall back to stdin for non-interactive environments.
+if [ -t 0 ]; then
+  _TTY=/dev/stdin
+elif [ -e /dev/tty ]; then
+  _TTY=/dev/tty
+else
+  _TTY=/dev/stdin
+fi
 
 prompt() {
   # prompt <var_name> <message> [default]
@@ -21,7 +42,7 @@ prompt() {
     printf "%s: " "$msg" >&2
   fi
   local input
-  read -r input </dev/tty
+  read -r input <"$_TTY" || true
   if [ -z "$input" ] && [ -n "$default" ]; then
     input="$default"
   fi
@@ -35,7 +56,7 @@ yn() {
   if [ "$default" = "y" ]; then hint="Y/n"; else hint="y/N"; fi
   printf "%s [%s]: " "$msg" "$hint" >&2
   local input
-  read -r input </dev/tty
+  read -r input <"$_TTY" || true
   input="${input:-$default}"
   case "$input" in
     [Yy]*) return 0 ;;
@@ -54,35 +75,52 @@ fetch_template() {
 }
 
 render_context() {
-  # Substitute {{placeholders}} in the template file in-place
+  # Substitute {{placeholders}} in the template file in-place.
+  # Values are passed via argv (python3) or temp files (awk) to safely handle
+  # spaces, newlines, |, &, and \ in paths and user-provided strings.
   local file="$1"
   local name="$2" goal="$3" stack="$4" deployed="$5" tree="$6" conventions="$7"
-  # Use a temp file; avoid pipeline so newlines in values are safe
-  local tmp
-  tmp="$(mktemp)"
-  sed \
-    -e "s|{{name}}|$name|g" \
-    -e "s|{{goal}}|$goal|g" \
-    -e "s|{{stack}}|$stack|g" \
-    -e "s|{{deployed_on}}|$deployed|g" \
-    "$file" > "$tmp"
-  # folder_structure and conventions may be multi-line; use Python/awk if available
   if command -v python3 >/dev/null 2>&1; then
-    python3 - "$tmp" "$tree" "$conventions" <<'PYEOF'
-import sys, pathlib
-f, tree, conventions = sys.argv[1], sys.argv[2], sys.argv[3]
+    python3 - "$file" "$name" "$goal" "$stack" "$deployed" "$conventions" <<PYEOF
+import sys, pathlib, os
+f, name, goal, stack, deployed, conventions = sys.argv[1:]
+tree = os.environ.get("_WIKI_TREE", "")
 content = pathlib.Path(f).read_text()
+content = content.replace("{{name}}", name)
+content = content.replace("{{goal}}", goal)
+content = content.replace("{{stack}}", stack)
+content = content.replace("{{deployed_on}}", deployed)
 content = content.replace("{{folder_structure}}", tree)
 content = content.replace("{{conventions}}", conventions)
 pathlib.Path(f).write_text(content)
 PYEOF
   else
-    # Fallback: single-line values only
-    sed -i.bak "s|{{folder_structure}}|$tree|g" "$tmp" 2>/dev/null || sed -i "" "s|{{folder_structure}}|$tree|g" "$tmp"
-    sed -i.bak "s|{{conventions}}|$conventions|g" "$tmp" 2>/dev/null || sed -i "" "s|{{conventions}}|$conventions|g" "$tmp"
-    rm -f "$tmp.bak"
+    # python3 not found — write multiline values to temp files so awk can read
+    # them safely (awk -v strips newlines, making it unusable for $tree/$conventions)
+    local tmp tree_file conv_file
+    tmp="$(mktemp)"
+    tree_file="$(mktemp)"
+    conv_file="$(mktemp)"
+    printf '%s' "$tree"         > "$tree_file"
+    printf '%s' "$conventions"  > "$conv_file"
+    awk -v name="$name" -v goal="$goal" -v stack="$stack" -v dep="$deployed" \
+        -v tf="$tree_file" -v cf="$conv_file" '
+    BEGIN {
+      while ((getline line < tf) > 0) tree = tree (tree ? "\n" : "") line
+      close(tf)
+      while ((getline line < cf) > 0) conv = conv (conv ? "\n" : "") line
+      close(cf)
+    }
+    { gsub(/\{\{name\}\}/, name)
+      gsub(/\{\{goal\}\}/, goal)
+      gsub(/\{\{stack\}\}/, stack)
+      gsub(/\{\{deployed_on\}\}/, dep)
+      gsub(/\{\{folder_structure\}\}/, tree)
+      gsub(/\{\{conventions\}\}/, conv)
+      print }' "$file" > "$tmp"
+    mv "$tmp" "$file"
+    rm -f "$tree_file" "$conv_file"
   fi
-  mv "$tmp" "$file"
 }
 
 write_rules() {
@@ -103,13 +141,13 @@ write_rules() {
   fi
 }
 
-# ── Step 1: check for existing wiki ──────────────────────────────────────────
+# Step 1: check for existing wiki 
 
 OVERWRITE=false
 if [ -d "$PROJECT_DIR/wiki" ]; then
   echo "A wiki/ folder already exists in this project."
   printf "What would you like to do? [skip / overwrite / cancel] (default: skip): " >&2
-  read -r choice </dev/tty
+  read -r choice <"$_TTY" || true
   choice="${choice:-skip}"
   case "$choice" in
     overwrite) OVERWRITE=true ;;
@@ -118,30 +156,32 @@ if [ -d "$PROJECT_DIR/wiki" ]; then
   esac
 fi
 
-# ── Step 2: scaffold folder tree ─────────────────────────────────────────────
+# Step 2: scaffold folder tree 
 
-echo ""
-echo "Scaffolding wiki/ folder..."
+if [ ! -d "$PROJECT_DIR/wiki" ] || [ "$OVERWRITE" = true ]; then
+  echo ""
+  echo "Scaffolding wiki/ folder..."
 
-mkdir -p \
-  "$PROJECT_DIR/wiki/bugs/open" \
-  "$PROJECT_DIR/wiki/bugs/fixed" \
-  "$PROJECT_DIR/wiki/plans/active" \
-  "$PROJECT_DIR/wiki/plans/done" \
-  "$PROJECT_DIR/wiki/plans/abandoned"
+  mkdir -p \
+    "$PROJECT_DIR/wiki/bugs/open" \
+    "$PROJECT_DIR/wiki/bugs/fixed" \
+    "$PROJECT_DIR/wiki/plans/active" \
+    "$PROJECT_DIR/wiki/plans/done" \
+    "$PROJECT_DIR/wiki/plans/abandoned"
 
-for dir in \
-  "$PROJECT_DIR/wiki/bugs/open" \
-  "$PROJECT_DIR/wiki/bugs/fixed" \
-  "$PROJECT_DIR/wiki/plans/active" \
-  "$PROJECT_DIR/wiki/plans/done" \
-  "$PROJECT_DIR/wiki/plans/abandoned"; do
-  touch "$dir/.gitkeep"
-done
+  for dir in \
+    "$PROJECT_DIR/wiki/bugs/open" \
+    "$PROJECT_DIR/wiki/bugs/fixed" \
+    "$PROJECT_DIR/wiki/plans/active" \
+    "$PROJECT_DIR/wiki/plans/done" \
+    "$PROJECT_DIR/wiki/plans/abandoned"; do
+    touch "$dir/.gitkeep"
+  done
 
-echo "  Created wiki/ directory tree"
+  echo "  Created wiki/ directory tree"
+fi
 
-# ── Step 3: fetch templates to a temp dir ────────────────────────────────────
+# Step 3: fetch templates to a temp dir 
 
 TPL_DIR="$(mktemp -d)"
 trap 'rm -rf "$TPL_DIR"' EXIT
@@ -150,20 +190,26 @@ fetch_template "CONTEXT.md"       "$TPL_DIR/CONTEXT.md"
 fetch_template "log.md"           "$TPL_DIR/log.md"
 fetch_template "rules.md.snippet" "$TPL_DIR/rules.md.snippet"
 
-# ── Step 4: inspect the project ──────────────────────────────────────────────
+# Step 4: inspect the project 
 
-TREE="$(ls -1 "$PROJECT_DIR" 2>/dev/null | grep -v '^wiki$' | head -30 | sed 's/^/  /')"
+TREE="$(ls -1A "$PROJECT_DIR" 2>/dev/null | grep -v '^wiki$' | head -30 | sed 's/^/  /')"
 
 STACK_GUESS=""
 if [ -f "$PROJECT_DIR/package.json" ]; then
-  lang="$(python3 -c "import json,sys; d=json.load(open('$PROJECT_DIR/package.json')); f=d.get('dependencies',{}); f.update(d.get('devDependencies',{})); print(', '.join(list(f.keys())[:6]))" 2>/dev/null || true)"
+  lang="$(python3 -c "
+import json,sys
+d=json.load(open(sys.argv[1]))
+f=d.get('dependencies',{})
+f.update(d.get('devDependencies',{}))
+print(', '.join(list(f.keys())[:6]))
+" "$PROJECT_DIR/package.json" 2>/dev/null || true)"
   STACK_GUESS="Node.js${lang:+ ($lang)}"
 elif [ -f "$PROJECT_DIR/pyproject.toml" ]; then
   STACK_GUESS="Python (pyproject.toml)"
 elif [ -f "$PROJECT_DIR/Cargo.toml" ]; then
   STACK_GUESS="Rust (Cargo)"
 elif [ -f "$PROJECT_DIR/go.mod" ]; then
-  MOD="$(head -1 "$PROJECT_DIR/go.mod" 2>/dev/null | awk '{print $2}')"
+  MOD="$(grep -m1 '^module ' "$PROJECT_DIR/go.mod" 2>/dev/null | awk '{print $2}')"
   STACK_GUESS="Go${MOD:+ ($MOD)}"
 fi
 
@@ -172,12 +218,17 @@ if [ -f "$PROJECT_DIR/.gitignore" ]; then
   CONVENTIONS="- .gitignore present"
 fi
 if [ -f "$PROJECT_DIR/package.json" ]; then
-  SCRIPTS="$(python3 -c "import json,sys; d=json.load(open('$PROJECT_DIR/package.json')); s=d.get('scripts',{}); print(', '.join(list(s.keys())[:6]))" 2>/dev/null || true)"
+  SCRIPTS="$(python3 -c "
+import json,sys
+d=json.load(open(sys.argv[1]))
+s=d.get('scripts',{})
+print(', '.join(list(s.keys())[:6]))
+" "$PROJECT_DIR/package.json" 2>/dev/null || true)"
   [ -n "$SCRIPTS" ] && CONVENTIONS="${CONVENTIONS:+$CONVENTIONS
 }- npm scripts: $SCRIPTS"
 fi
 
-# ── Step 5: ask the user for project metadata ─────────────────────────────────
+# Step 5: ask the user for project metadata 
 
 echo ""
 echo "A few quick questions about your project:"
@@ -188,11 +239,11 @@ prompt PROJECT_GOAL "Goal (one sentence)"
 prompt PROJECT_STACK "Stack" "${STACK_GUESS:-unknown}"
 prompt PROJECT_DEPLOY "Deployed on (e.g. Vercel, AWS, local only, not yet)"
 
-# ── Step 6: write wiki/CONTEXT.md ────────────────────────────────────────────
+# Step 6: write wiki/CONTEXT.md 
 
 if [ "$OVERWRITE" = true ] || [ ! -f "$PROJECT_DIR/wiki/CONTEXT.md" ]; then
   cp "$TPL_DIR/CONTEXT.md" "$PROJECT_DIR/wiki/CONTEXT.md"
-  render_context \
+  _WIKI_TREE="$TREE" render_context \
     "$PROJECT_DIR/wiki/CONTEXT.md" \
     "$PROJECT_NAME" "$PROJECT_GOAL" "$PROJECT_STACK" "$PROJECT_DEPLOY" \
     "$TREE" "${CONVENTIONS:-none detected}"
@@ -203,7 +254,7 @@ else
   echo "  wiki/CONTEXT.md already exists — skipping"
 fi
 
-# ── Step 7: write wiki/log.md ────────────────────────────────────────────────
+# Step 7: write wiki/log.md 
 
 if [ "$OVERWRITE" = true ] || [ ! -f "$PROJECT_DIR/wiki/log.md" ]; then
   cp "$TPL_DIR/log.md" "$PROJECT_DIR/wiki/log.md"
@@ -212,7 +263,7 @@ else
   echo "  wiki/log.md already exists — skipping"
 fi
 
-# ── Step 8: write rules to AGENTS.md (default) and optionally CLAUDE.md ──────
+# Step 8: write rules to AGENTS.md (default) and optionally CLAUDE.md 
 
 echo ""
 echo "Writing wiki rules..."
@@ -224,7 +275,7 @@ if yn "Also write the rules to CLAUDE.md? (enables bare keywords in Claude Code 
   write_rules "$PROJECT_DIR/CLAUDE.md" "$TPL_DIR/rules.md.snippet"
 fi
 
-# ── Step 9: summary ──────────────────────────────────────────────────────────
+# Step 9: summary 
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

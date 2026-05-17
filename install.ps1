@@ -49,7 +49,7 @@ if (-not (Test-Path $ClaudeMd)) {
   New-Item -ItemType Directory -Force -Path (Split-Path -Parent $ClaudeMd) | Out-Null
   [System.IO.File]::WriteAllText($ClaudeMd, $TriggerBlock + "`n", $utf8NoBom)
   Write-Host "  Created $ClaudeMd with wiki-init trigger"
-} elseif (Select-String -Path $ClaudeMd -Pattern "^# wiki-init$" -Quiet) {
+} elseif (Select-String -Path $ClaudeMd -Pattern "# wiki-init" -Quiet) {
   Write-Host "  Trigger already present in $ClaudeMd - skipping"
 } else {
   $existing = [System.IO.File]::ReadAllText($ClaudeMd)

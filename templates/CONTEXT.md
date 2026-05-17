@@ -6,7 +6,9 @@ Stack: {{stack}}
 Deployed on: {{deployed_on}}
 
 ## Folder Structure
+```
 {{folder_structure}}
+```
 
 ## Conventions
 {{conventions}}
@@ -22,7 +24,10 @@ wiki/
   plans/active/     — plans currently in progress
   plans/done/       — completed plans
   plans/abandoned/  — plans we decided not to pursue
+  code/             — one .md per source file (run `codemap` to generate)
 ```
+
+`wiki/code/` mirrors the project folder structure. Each file lists the source file's purpose, functions, and imports as `[[wikilinks]]` to other code files — so opening `wiki/` in Obsidian shows the codebase as a navigable dependency graph alongside plans and bugs.
 
 > Open the `wiki/` folder as an Obsidian vault to get graph view of linked plans, backlinks panel, and Dataview queries across all plan frontmatter.
 
@@ -34,3 +39,4 @@ wiki/
 | bug      | Create a new bug file in wiki/bugs/open/                |
 | status   | Summarize active plans, recent log, open bugs           |
 | read     | Read all wiki files and summarize full project context  |
+| codemap  | Generate wiki/code/<path>.md per source file            |

@@ -14,22 +14,22 @@ $utf8NoBom  = New-Object System.Text.UTF8Encoding $false
 $ScriptDir = $null
 if ($PSCommandPath) { $ScriptDir = Split-Path -Parent $PSCommandPath }
 
-# ── helpers ──────────────────────────────────────────────────────────────────
+# helpers
 
 function Prompt-User($Message, $Default = "") {
   if ($Default) { Write-Host -NoNewline "$Message [$Default]: " }
   else          { Write-Host -NoNewline "${Message}: " }
-  $input = Read-Host
-  if (-not $input -and $Default) { return $Default }
-  return $input
+  $reply = Read-Host
+  if (-not $reply -and $Default) { return $Default }
+  return $reply
 }
 
 function Prompt-YN($Message, $Default = "n") {
   $hint = if ($Default -eq "y") { "Y/n" } else { "y/N" }
   Write-Host -NoNewline "$Message [$hint]: "
-  $input = Read-Host
-  if (-not $input) { $input = $Default }
-  return $input -match "^[Yy]"
+  $reply = Read-Host
+  if (-not $reply) { $reply = $Default }
+  return $reply -match "^[Yy]"
 }
 
 function Fetch-Template($Name, $Dest) {
@@ -58,7 +58,7 @@ function Write-Rules($Target, $Snippet) {
   }
 }
 
-# ── Step 1: check for existing wiki ──────────────────────────────────────────
+# Step 1: check for existing wiki 
 
 $Overwrite = $false
 if (Test-Path (Join-Path $ProjectDir "wiki")) {
@@ -71,48 +71,79 @@ if (Test-Path (Join-Path $ProjectDir "wiki")) {
   }
 }
 
-# ── Step 2: scaffold folder tree ─────────────────────────────────────────────
+# Step 2: scaffold folder tree 
 
-Write-Host ""
-Write-Host "Scaffolding wiki/ folder..."
+$WikiExists = Test-Path (Join-Path $ProjectDir "wiki")
+if (-not $WikiExists -or $Overwrite) {
+  Write-Host ""
+  Write-Host "Scaffolding wiki/ folder..."
 
-$Dirs = @(
-  "wiki\bugs\open", "wiki\bugs\fixed",
-  "wiki\plans\active", "wiki\plans\done", "wiki\plans\abandoned"
-)
-foreach ($d in $Dirs) {
-  $full = Join-Path $ProjectDir $d
-  New-Item -ItemType Directory -Force -Path $full | Out-Null
-  [System.IO.File]::WriteAllText((Join-Path $full ".gitkeep"), "", $utf8NoBom)
+  $Dirs = @(
+    "wiki\bugs\open", "wiki\bugs\fixed",
+    "wiki\plans\active", "wiki\plans\done", "wiki\plans\abandoned"
+  )
+  foreach ($d in $Dirs) {
+    $full = Join-Path $ProjectDir $d
+    New-Item -ItemType Directory -Force -Path $full | Out-Null
+    $gk = Join-Path $full ".gitkeep"
+    if (-not (Test-Path $gk)) {
+      [System.IO.File]::WriteAllText($gk, "", $utf8NoBom)
+    }
+  }
+  Write-Host "  Created wiki/ directory tree"
 }
-Write-Host "  Created wiki/ directory tree"
 
-# ── Step 3: fetch templates ───────────────────────────────────────────────────
+# Step 3: fetch templates 
 
 $TplDir = Join-Path ([System.IO.Path]::GetTempPath()) ("wiki-init-" + [System.IO.Path]::GetRandomFileName())
 New-Item -ItemType Directory -Force -Path $TplDir | Out-Null
+
+try {
 
 Fetch-Template "CONTEXT.md"       (Join-Path $TplDir "CONTEXT.md")
 Fetch-Template "log.md"           (Join-Path $TplDir "log.md")
 Fetch-Template "rules.md.snippet" (Join-Path $TplDir "rules.md.snippet")
 
-# ── Step 4: inspect the project ──────────────────────────────────────────────
+# Step 4: inspect the project 
 
-$TreeItems  = Get-ChildItem -Path $ProjectDir -Name | Where-Object { $_ -ne "wiki" } | Select-Object -First 30
+$TreeItems  = Get-ChildItem -Path $ProjectDir -Name -Force | Where-Object { $_ -ne "wiki" } | Select-Object -First 30
 $TreeString = ($TreeItems | ForEach-Object { "  $_" }) -join "`n"
 
-$StackGuess = ""
-if (Test-Path (Join-Path $ProjectDir "package.json")) {
+$StackGuess   = ""
+$Conventions  = ""
+$PkgJson      = Join-Path $ProjectDir "package.json"
+
+if (Test-Path $PkgJson) {
   $StackGuess = "Node.js"
+  try {
+    $pkg  = Get-Content $PkgJson -Raw | ConvertFrom-Json
+    $deps = @{}
+    if ($pkg.dependencies)    { $pkg.dependencies.PSObject.Properties    | ForEach-Object { $deps[$_.Name] = 1 } }
+    if ($pkg.devDependencies) { $pkg.devDependencies.PSObject.Properties | ForEach-Object { $deps[$_.Name] = 1 } }
+    $top6 = ($deps.Keys | Select-Object -First 6) -join ", "
+    if ($top6) { $StackGuess = "Node.js ($top6)" }
+    if ($pkg.scripts) {
+      $scripts = ($pkg.scripts.PSObject.Properties.Name | Select-Object -First 6) -join ", "
+      if ($scripts) { $Conventions += "- npm scripts: $scripts`n" }
+    }
+  } catch {}
 } elseif (Test-Path (Join-Path $ProjectDir "pyproject.toml")) {
   $StackGuess = "Python (pyproject.toml)"
 } elseif (Test-Path (Join-Path $ProjectDir "Cargo.toml")) {
   $StackGuess = "Rust (Cargo)"
 } elseif (Test-Path (Join-Path $ProjectDir "go.mod")) {
-  $StackGuess = "Go"
+  $gomod = Get-Content (Join-Path $ProjectDir "go.mod") -TotalCount 1 2>$null
+  $mod   = if ($gomod -match "^module\s+(\S+)") { $Matches[1] } else { "" }
+  $StackGuess = "Go$(if ($mod) { " ($mod)" })"
 }
 
-# ── Step 5: ask the user for project metadata ─────────────────────────────────
+if (Test-Path (Join-Path $ProjectDir ".gitignore")) {
+  $Conventions = "- .gitignore present`n" + $Conventions
+}
+$Conventions = $Conventions.TrimEnd()
+if (-not $Conventions) { $Conventions = "none detected" }
+
+# Step 5: ask the user for project metadata 
 
 Write-Host ""
 Write-Host "A few quick questions about your project:"
@@ -123,18 +154,18 @@ $ProjectGoal   = Prompt-User "Goal (one sentence)"
 $ProjectStack  = Prompt-User "Stack" $StackGuess
 $ProjectDeploy = Prompt-User "Deployed on (e.g. Vercel, AWS, local only, not yet)"
 
-# ── Step 6: write wiki/CONTEXT.md ────────────────────────────────────────────
+# Step 6: write wiki/CONTEXT.md 
 
 $ContextDest = Join-Path $ProjectDir "wiki\CONTEXT.md"
 if ($Overwrite -or -not (Test-Path $ContextDest)) {
   $content = [System.IO.File]::ReadAllText((Join-Path $TplDir "CONTEXT.md"))
-  $content = $content `
-    -replace "\{\{name\}\}",             $ProjectName `
-    -replace "\{\{goal\}\}",             $ProjectGoal `
-    -replace "\{\{stack\}\}",            $ProjectStack `
-    -replace "\{\{deployed_on\}\}",      $ProjectDeploy `
-    -replace "\{\{folder_structure\}\}", $TreeString `
-    -replace "\{\{conventions\}\}",      "none detected"
+  # Use .NET string .Replace() so user values with $, \, & are treated literally.
+  $content = $content.Replace("{{name}}",             $ProjectName)
+  $content = $content.Replace("{{goal}}",             $ProjectGoal)
+  $content = $content.Replace("{{stack}}",            $ProjectStack)
+  $content = $content.Replace("{{deployed_on}}",      $ProjectDeploy)
+  $content = $content.Replace("{{folder_structure}}", $TreeString)
+  $content = $content.Replace("{{conventions}}",      $Conventions)
   [System.IO.File]::WriteAllText($ContextDest, $content, $utf8NoBom)
   Write-Host ""
   Write-Host "  Wrote wiki/CONTEXT.md"
@@ -143,7 +174,7 @@ if ($Overwrite -or -not (Test-Path $ContextDest)) {
   Write-Host "  wiki/CONTEXT.md already exists — skipping"
 }
 
-# ── Step 7: write wiki/log.md ────────────────────────────────────────────────
+# Step 7: write wiki/log.md 
 
 $LogDest = Join-Path $ProjectDir "wiki\log.md"
 if ($Overwrite -or -not (Test-Path $LogDest)) {
@@ -153,7 +184,7 @@ if ($Overwrite -or -not (Test-Path $LogDest)) {
   Write-Host "  wiki/log.md already exists — skipping"
 }
 
-# ── Step 8: write rules to AGENTS.md and optionally CLAUDE.md ────────────────
+# Step 8: write rules to AGENTS.md and optionally CLAUDE.md 
 
 Write-Host ""
 Write-Host "Writing wiki rules..."
@@ -165,10 +196,12 @@ if (Prompt-YN "Also write the rules to CLAUDE.md? (enables bare keywords in Clau
   Write-Rules (Join-Path $ProjectDir "CLAUDE.md") (Join-Path $TplDir "rules.md.snippet")
 }
 
-# Cleanup temp dir
-Remove-Item -Recurse -Force $TplDir
+} finally {
+  # Always clean up temp dir even if an error was thrown
+  Remove-Item -Recurse -Force $TplDir -ErrorAction SilentlyContinue
+}
 
-# ── Step 9: summary ──────────────────────────────────────────────────────────
+# Step 9: summary 
 
 Write-Host ""
 Write-Host ("━" * 48)

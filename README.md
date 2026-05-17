@@ -25,17 +25,17 @@ curl -fsSL https://raw.githubusercontent.com/lenminh002/project-wiki/main/wiki-i
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/lenminh202/project-wiki/main/wiki-init.ps1 | iex
+irm https://raw.githubusercontent.com/lenminh002/project-wiki/main/wiki-init.ps1 | iex
 ```
 
 ### From a clone (any OS)
 
 ```bash
-git clone https://github.com/lenminh202/project-wiki
-cd your-project
-bash /path/to/project-wiki/wiki-init.sh   # macOS / Linux
+git clone https://github.com/lenminh002/project-wiki
+cd project-wiki
+bash wiki-init.sh   # macOS / Linux
 # or
-pwsh /path/to/project-wiki/wiki-init.ps1  # Windows
+pwsh wiki-init.ps1  # Windows
 ```
 
 The script asks 4 questions, scaffolds `wiki/`, and writes the rules to **`AGENTS.md`** by default. It then asks if you also want to write them to `CLAUDE.md` (useful if you switch between tools).
@@ -63,7 +63,7 @@ irm https://raw.githubusercontent.com/lenminh002/project-wiki/main/install.ps1 |
 ### From a clone (any OS)
 
 ```bash
-git clone https://github.com/lenminh202/project-wiki
+git clone https://github.com/lenminh002/project-wiki
 cd project-wiki
 ./install.sh        # macOS / Linux
 # or
@@ -116,6 +116,22 @@ Open `wiki/` as an **Obsidian vault** to get the plan graph view and backlinks p
 | `bug` | Creates a new file in `wiki/bugs/open/` with frontmatter and wikilink support |
 | `status` | Lists active plans, last 5 log entries, open bugs |
 | `read` | Reads all wiki files, summarizes context, asks "What are we working on?" |
+| `codemap` | Generates one `wiki/code/<path>.md` per source file — purpose, functions, and import wikilinks |
+
+## Code graph (`codemap`)
+
+Type `codemap` in any session and the agent will:
+
+1. Ask which folder(s) to scan
+2. Walk the chosen folders (respecting `.gitignore`, skipping `node_modules/`, `dist/`, etc.)
+3. Write one `wiki/code/<mirrored-path>.md` per source file, each containing:
+   - **Purpose** — one-line summary of what the file does
+   - **Functions** — bulleted list with one-line descriptions
+   - **Imports** — in-repo imports as `[[wikilinks]]`; third-party imports as `external: package-name`
+
+Open `wiki/` as an Obsidian vault and the graph view shows your **entire codebase as a dependency graph** — scripts as nodes, imports as edges — sitting alongside your plans and bug nodes.
+
+Re-run `codemap` anytime to refresh. When the agent edits a source file that already has a `wiki/code/` entry, it automatically keeps that entry up to date.
 
 ## Plan rules
 
