@@ -88,26 +88,31 @@ Replace the following placeholders with real values:
 
 Write the result to `wiki/CONTEXT.md`.
 
-### Step 7 — Handle project CLAUDE.md
+### Step 7 — Write the wiki rules to the project rules file
 
-Read `~/.claude/skills/wiki-init/templates/CLAUDE.md.snippet`.
+Read `~/.claude/skills/wiki-init/templates/rules.md.snippet`.
 
-Check whether `./CLAUDE.md` exists.
+**Default: write to `./AGENTS.md`** (read by Codex CLI, Aider, Jules, recent Cursor, and many other agentic tools).
 
-**If CLAUDE.md exists:**
-- Read it.
-- Check if it already contains the text `# Wiki workflow`. If yes, skip this step (idempotent — don't duplicate).
-- If not, append the snippet content to the end of the existing file.
+- Check whether `./AGENTS.md` exists.
+  - If it contains `# Wiki workflow` already → skip (idempotent, don't duplicate).
+  - If it exists but lacks the block → append the snippet to the end.
+  - If it does not exist → create it with the snippet as its entire content.
 
-**If CLAUDE.md does not exist:**
-- Create `./CLAUDE.md` with the snippet content as its entire contents.
+Then use `AskUserQuestion` to ask: **"Also write the rules to CLAUDE.md? (This lets bare keywords work in Claude Code sessions in this project.)"** with options: **Yes** / **No (AGENTS.md is enough)**.
+
+If the user says Yes:
+- Check whether `./CLAUDE.md` exists.
+  - If it contains `# Wiki workflow` already → skip (idempotent).
+  - If it exists but lacks the block → append the snippet.
+  - If it does not exist → create it with the snippet as its entire content.
 
 ### Step 8 — Confirm to the user
 
-Print a confirmation listing every file and folder created, whether CLAUDE.md was created or appended to (or skipped), and a short note:
+Print a confirmation listing every file and folder created, and which rules files were written or skipped (AGENTS.md and/or CLAUDE.md), then add:
 
 > Your wiki is ready. Open `wiki/` as an Obsidian vault to get graph view of linked plans and backlinks.
-> CLAUDE.md has been updated — bare keywords `log`, `bug`, `status`, and `read` will work in any future session in this project.
+> AGENTS.md has been updated — bare keywords `log`, `bug`, `status`, and `read` will work in any agentic coding tool session in this project.
 
 Then ask: **"What are we working on?"**
 
@@ -122,7 +127,7 @@ Then ask: **"What are we working on?"**
 All templates are in `~/.claude/skills/wiki-init/templates/`:
 - `CONTEXT.md` — project context template with `{{placeholders}}`
 - `log.md` — seed session log
-- `CLAUDE.md.snippet` — rules block that makes bare keywords and auto-plan saving work
+- `rules.md.snippet` — rules block that makes bare keywords and auto-plan saving work
 
 ## What the Installed Rules Do
 

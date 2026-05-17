@@ -19,7 +19,7 @@ if ($PSCommandPath) {
   $ScriptDir = Split-Path -Parent $PSCommandPath
 }
 
-$Templates = @("CONTEXT.md", "log.md", "CLAUDE.md.snippet")
+$Templates = @("CONTEXT.md", "log.md", "rules.md.snippet")
 
 if ($ScriptDir -and (Test-Path (Join-Path $ScriptDir "SKILL.md"))) {
   Copy-Item -LiteralPath (Join-Path $ScriptDir "SKILL.md") -Destination (Join-Path $SkillDir "SKILL.md") -Force

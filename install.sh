@@ -10,14 +10,14 @@ echo "Installing wiki-init skill..."
 
 mkdir -p "$SKILL_DIR/templates"
 
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$SCRIPT_DIR/SKILL.md" ] && [ -f "$SCRIPT_DIR/templates/CLAUDE.md.snippet" ]; then
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$SCRIPT_DIR/SKILL.md" ] && [ -f "$SCRIPT_DIR/templates/rules.md.snippet" ]; then
   cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
   cp -R "$SCRIPT_DIR/templates/." "$SKILL_DIR/templates/"
 else
   curl -fsSL "$REPO/SKILL.md" -o "$SKILL_DIR/SKILL.md"
-  curl -fsSL "$REPO/templates/CONTEXT.md"        -o "$SKILL_DIR/templates/CONTEXT.md"
-  curl -fsSL "$REPO/templates/log.md"            -o "$SKILL_DIR/templates/log.md"
-  curl -fsSL "$REPO/templates/CLAUDE.md.snippet" -o "$SKILL_DIR/templates/CLAUDE.md.snippet"
+  curl -fsSL "$REPO/templates/CONTEXT.md"       -o "$SKILL_DIR/templates/CONTEXT.md"
+  curl -fsSL "$REPO/templates/log.md"           -o "$SKILL_DIR/templates/log.md"
+  curl -fsSL "$REPO/templates/rules.md.snippet" -o "$SKILL_DIR/templates/rules.md.snippet"
 fi
 
 echo "  Copied skill files to $SKILL_DIR"
