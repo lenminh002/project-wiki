@@ -1,20 +1,20 @@
 # Wiki Bootstrap Rule
 
-When I say `wiki-init`, OR at the start of a session if `wiki/` does not exist in the project root — scaffold the wiki without asking me anything.
+When I say `wiki-init`, scaffold the wiki in the current project root.
 
-1. If `wiki/` already exists, skip this rule entirely and continue normally.
+1. If `wiki/` already exists, ask whether to skip, replace the generated wiki files, or cancel before changing wiki files.
 2. Create these directories and placeholder files:
    - `wiki/bugs/open/.gitkeep`
    - `wiki/bugs/fixed/.gitkeep`
    - `wiki/plans/active/.gitkeep`
    - `wiki/plans/done/.gitkeep`
    - `wiki/plans/abandoned/.gitkeep`
-3. Auto-detect (no questions):
+3. Detect project metadata from non-secret project files only. Do not read `.env*`, private keys, credential files, token files, or unrelated hidden files.
    - **name** — `package.json` `.name` → `pyproject.toml` `[project] name` → `go.mod` module path last segment → README first `#` heading → current directory basename
    - **goal** — `package.json` `.description` → `pyproject.toml` `[project] description` → README first non-heading paragraph → `"(not specified)"`
    - **stack** — infer from manifests and key dependencies
    - **deployed_on** — file presence: `vercel.json` → "Vercel", `netlify.toml` → "Netlify", `fly.toml` → "Fly.io", `render.yaml` → "Render", `railway.toml` → "Railway", `Dockerfile` or `docker-compose.yml` → "Docker", `.github/workflows/` with a deploy file → "GitHub Actions", else "not yet"
-   - **folder_structure** — run `ls -1A` in the project root, exclude `wiki/`, take first 30 entries, indent each with two spaces
+   - **folder_structure** — inspect the project root, exclude `wiki/`, take first 30 entries, indent each with two spaces
    - **conventions** — infer from `.gitignore`, test file locations, config naming patterns; if nothing notable, write `- none detected`
 4. Write `wiki/CONTEXT.md` with this exact content (replace `{{placeholders}}`):
 
@@ -61,6 +61,12 @@ wiki/
 | status   | Summarize active plans, recent log, open bugs           |
 | read     | Read all wiki files and summarize full project context  |
 | codemap  | Generate wiki/code/<path>.md per source file            |
+
+## Safety Boundaries
+
+- The wiki workflow only writes markdown files under `wiki/`, plus project rule files when explicitly configured.
+- Do not read `.env*`, credential files, private keys, token files, or unrelated hidden files for wiki generation.
+- Do not install dependencies, run project code, call network services, or run scripts for wiki generation.
 ```
 
 5. Write `wiki/log.md` with this exact content (replace the date with today's date):
@@ -79,9 +85,7 @@ wiki/
 # Wiki workflow
 
 ## Auto-Plan Rule
-When you generate any multi-step implementation plan, feature breakdown, or step-by-step approach — whether I asked for it or you suggested it — automatically save it as a file in `wiki/plans/active/`.
-
-Don't ask me. Just save it.
+When you generate any multi-step implementation plan, feature breakdown, or step-by-step approach — whether I asked for it or you suggested it — save it as a file in `wiki/plans/active/` so project context persists across sessions.
 
 Examples of when to auto-save:
 - "how should we build the auth system" → you generate steps → save it
@@ -106,7 +110,7 @@ related: []           # list of [[wikilinks]] to related plans
 When auto-saving a new plan, first scan `wiki/plans/active/` and `wiki/plans/done/` for related plans (topic overlap, or user says "build on / extend / replace / depends on").
 
 **If a plan in `wiki/plans/active/` is the same topic or surprisingly similar** (same feature, same area, overlapping steps): stop and ask the user — *"[[existing-plan]] looks very similar to this. Update it, or create a new plan?"*
-- If **update**: overwrite the existing plan file, update its `updated:` frontmatter, and stop — do not create a new file.
+- If **update**: replace the existing plan file content, update its `updated:` frontmatter, and stop — do not create a new file.
 - If **new**: proceed to create the new plan file as normal.
 
 If any related (but not identical) plans are found:
@@ -124,10 +128,10 @@ If any related (but not identical) plans are found:
 ## Plan Rules
 - Each plan is its own file in `wiki/plans/active/`
 - File names are lowercase-with-dashes
-- Changed plans → overwrite the file, update `updated:` frontmatter; don't make a new one
+- Changed plans → replace the file content, update `updated:` frontmatter; don't make a new one
 - Abandoned plans → move file to `wiki/plans/abandoned/`, set `status: abandoned`
 - Done plans → move file to `wiki/plans/done/`, set `status: done`
-- Never delete plan files
+- Never remove plan files
 - Never leave stale plans in `active/`
 - When a plan's steps are all completed, ask me: "Plan [[name]] looks done. Move to done?" — only move it after I confirm
 - When moving a plan, do NOT rewrite `[[wikilinks]]` pointing to it — Obsidian resolves them by filename across subfolders
@@ -137,7 +141,7 @@ Before editing, updating, or marking a plan done, read every file referenced in 
 - `depends-on` / `blocks` tags matter most — a change here can break those plans directly.
 - `builds-on` / `extends` tags mean changes may need to propagate forward into those plans.
 - If a change to the current plan invalidates or contradicts a linked plan, flag it to the user *before* applying the change, and ask whether that plan needs an update, a status change, or to be replaced.
-- After modifying a plan, update its `updated:` frontmatter; if a linked plan is now stale because of this change, ask: "Does [[linked-plan]] need updating too?"
+- After modifying a plan, update its `updated:` frontmatter; if a linked plan may now be stale because of this change, ask: "Does [[linked-plan]] need updating too?"
 
 ## Read Rules
 When I say "read":
@@ -203,7 +207,7 @@ When creating a new bug, scan `wiki/bugs/open/` and `wiki/bugs/fixed/` for relat
 ## Bug Rules
 - One file per bug in `wiki/bugs/open/`, lowercase-with-dashes filename.
 - When a bug is fixed: move the file to `wiki/bugs/fixed/`, set `status: fixed`, add a `## Fix` section describing what was done.
-- Never delete bug files.
+- Never remove bug files.
 - Never leave stale bugs in `open/` after they're fixed.
 - When moving a bug, do NOT rewrite `[[wikilinks]]` pointing to it — Obsidian resolves them by filename across subfolders.
 
@@ -249,15 +253,15 @@ When I say "codemap":
    (omit section if file has no imports or links)
    ```
    Resolve in-repo imports and local HTML/CSS links to `[[basename]]` wikilinks (filename only, no path, no extension). For HTML, inspect local `<script src>`, `<link href>`, `<a href>`, `<img src>`, and similar source/href attributes. For CSS-like files, inspect `@import` and `url(...)`. Third-party, CDN, stdlib, absolute web URLs, `mailto:`, `tel:`, hash-only anchors, and data URIs get an `external:` prefix or are omitted when they do not represent a project file — no wikilink — so they don't create false graph edges.
-5. **Stale cleanup.** Inside the scanned folder only: delete any `wiki/code/<path>.md` whose source file no longer exists. List removals in the summary.
-6. **Summarize.** Report: files mapped, files removed, location (`wiki/code/`), and remind me to open `wiki/` in Obsidian for graph view.
+5. **Stale cleanup.** Inside the scanned folder only: identify any `wiki/code/<path>.md` whose source file no longer exists. Ask before removing stale code-map files, and list any removals in the summary.
+6. **Summarize.** Report: files mapped, stale files found or removed, location (`wiki/code/`), and remind me to open `wiki/` in Obsidian for graph view.
 
 ## Codemap Edit-Awareness Rule
 When you edit a source file that already has a corresponding `wiki/code/<path>.md`:
 - After making the edit, re-read the updated source file.
 - Refresh the `## Functions / Sections` and `## Imports / Links` sections of its `wiki/code/<path>.md` to match the new state.
 - Update the `updated:` frontmatter date.
-- Do this silently — no need to ask. If no `wiki/code/` file exists for it yet, skip (don't create one; the user runs `codemap` for that).
+- If no `wiki/code/` file exists for it yet, skip creating one; the user runs `codemap` for initial map generation.
 
 ## How to Start a Session
 1. Read `wiki/CONTEXT.md`

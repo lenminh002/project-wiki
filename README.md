@@ -11,6 +11,13 @@ Bootstraps a persistent project wiki that works with **any agentic coding tool**
 - `codemap` generates `wiki/code/` entries for source files, including HTML/CSS links
 - Full Obsidian compatibility — open `wiki/` as a vault for graph view and backlinks
 
+## Security model
+
+- Markdown-only skill: no runtime dependencies, shell scripts, package installs, or network calls.
+- Writes are limited to `wiki/`, `AGENTS.md`, and optional `CLAUDE.md`.
+- Project inspection is limited to non-secret metadata files; `.env*`, credential files, private keys, and token files are out of scope.
+- The agent asks before replacing existing wiki content, writing `CLAUDE.md`, or removing stale `wiki/code/` files.
+
 ---
 
 ## Install
@@ -42,6 +49,8 @@ Then open any project in a supported agent and run:
 ```
 
 The agent auto-detects your project's name, stack, and deploy target, scaffolds `wiki/`, and writes the rules to `AGENTS.md` (and optionally `CLAUDE.md` for Claude Code).
+
+Existing projects with an older `# Wiki workflow` block should rerun `/wiki-init` or manually refresh that block to get the latest safety and `codemap` rules.
 
 ---
 
@@ -86,7 +95,7 @@ Type `codemap` in any session and the agent will:
 
 Open `wiki/` as an Obsidian vault and the graph view shows your **entire codebase as a dependency graph** — source files as nodes, imports and local links as edges — sitting alongside your plans and bug nodes.
 
-Re-run `codemap` anytime to refresh. When the agent edits a source file that already has a `wiki/code/` entry, it automatically keeps that entry up to date.
+Re-run `codemap` anytime to refresh. When the agent edits a source file that already has a `wiki/code/` entry, it keeps that entry up to date.
 
 ## Plan rules
 
@@ -95,11 +104,11 @@ Re-run `codemap` anytime to refresh. When the agent edits a source file that alr
 - **The agent automatically scans existing plans and bugs**, detects semantic relationships, and adds wikilinks — no manual linking needed
 - Relationship tags (`builds-on`, `depends-on`, `replaces`, `related-to`) are inferred from content and context
 - Moving a plan to `done/` or `abandoned/` updates its `status:` frontmatter; wikilinks survive the move
-- The agent asks before moving a completed plan — never moves silently
+- The agent asks before moving a completed plan.
 
 ## Uninstall
 
-Remove `AGENTS.md` (or the `# Wiki Bootstrap Rule` / `# Wiki workflow` blocks from it) and delete the `wiki/` folder from your project.
+Remove `AGENTS.md` (or the `# Wiki Bootstrap Rule` / `# Wiki workflow` blocks from it) and remove the `wiki/` folder from your project.
 
 If you installed the persistent trigger with `npx skills add`, use your skills CLI or agent's skill directory to remove the global `wiki-init` skill.
 

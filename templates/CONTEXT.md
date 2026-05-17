@@ -40,3 +40,9 @@ wiki/
 | status   | Summarize active plans, recent log, open bugs           |
 | read     | Read all wiki files and summarize full project context  |
 | codemap  | Generate wiki/code/<path>.md per source file            |
+
+## Safety Boundaries
+
+- The wiki workflow only writes markdown files under `wiki/`, plus project rule files when explicitly configured.
+- Do not read `.env*`, credential files, private keys, token files, or unrelated hidden files for wiki generation.
+- Do not install dependencies, run project code, call network services, or run scripts for wiki generation.

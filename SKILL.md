@@ -1,12 +1,19 @@
 ---
 name: wiki-init
-description: "Scaffold a wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and install rules into project AGENTS.md by default so bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
+description: "Scaffold a markdown-only wiki/ folder with CONTEXT.md, log.md, bugs/{open,fixed}/, plans/{active,done,abandoned}/ and project rules in AGENTS.md so bare keywords log/bug/status/read work in future agent sessions. Also Obsidian-compatible with wikilinks and YAML frontmatter on every plan and bug."
 trigger: /wiki-init
 ---
 
 # /wiki-init
 
-Bootstrap a persistent project wiki with Obsidian-compatible linked plans, auto-plan saving, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions that read the project rules file.
+Bootstrap a persistent markdown-only project wiki with Obsidian-compatible linked plans, auto-plan saving, and bare-keyword commands (`log`, `bug`, `status`, `read`) that survive across future agent sessions that read the project rules file.
+
+## Safety Boundaries
+
+- Only create or update markdown files under `wiki/`, plus `AGENTS.md` and optionally `CLAUDE.md`.
+- Do not install dependencies, run project code, call network services, or run scripts.
+- Do not read secret-bearing files such as `.env*`, credential files, private keys, or token files.
+- Ask before replacing existing wiki content or adding rules to `CLAUDE.md`.
 
 ## Usage
 
@@ -20,9 +27,9 @@ Follow these steps in order. Do not skip steps.
 
 ### Step 1 — Check for existing wiki
 
-Run `ls ./wiki 2>/dev/null` to see if a `wiki/` folder already exists.
+Check whether a `wiki/` folder already exists.
 
-- If it exists: ask the user whether to skip (leave existing files untouched), overwrite (replace all files), or cancel. Do not proceed until the user answers. If they say skip or cancel, stop here.
+- If it exists: ask the user whether to skip (leave existing files untouched), replace the generated wiki files, or cancel. Do not proceed until the user answers. If they say skip or cancel, stop here.
 - If it does not exist: continue.
 
 ### Step 2 — Create folder structure
@@ -50,7 +57,7 @@ The skill's templates directory is relative to this `SKILL.md` file.
 
 ### Step 4 — Inspect the project
 
-Run `ls -1A` in the project root. Also attempt to read these files if they exist (do not error if missing):
+Inspect the project root directory listing. Also attempt to read these non-secret metadata files if they exist (do not error if missing):
 - `package.json`
 - `pyproject.toml`
 - `Cargo.toml`
@@ -59,6 +66,8 @@ Run `ls -1A` in the project root. Also attempt to read these files if they exist
 - `.gitignore`
 - `vercel.json`, `netlify.toml`, `fly.toml`, `render.yaml`, `railway.toml`, `Dockerfile`, `docker-compose.yml`
 
+Do not read `.env*`, private keys, credential files, token files, or unrelated hidden files.
+
 From what you find, infer:
 - **Stack**: language, framework, major dependencies
 - **Folder Structure**: a tree of the top-level directories with a one-line description of each
@@ -66,7 +75,7 @@ From what you find, infer:
 
 Prepare these three values to insert into CONTEXT.md.
 
-### Step 5 — Derive project metadata from scan (no questions)
+### Step 5 — Derive project metadata from scan
 
 Using only what you found in Step 4, determine:
 
@@ -83,7 +92,7 @@ Using only what you found in Step 4, determine:
    - `railway.toml` or `railway.json` → "Railway"
    - Nothing found → "not yet"
 
-Do not ask the user anything in this step. Proceed directly to Step 6.
+Use the detected metadata when available. If a value cannot be detected, use the documented fallback.
 
 ### Step 6 — Write wiki/CONTEXT.md
 
@@ -129,9 +138,9 @@ Then ask: **"What are we working on?"**
 
 ## Idempotency Guarantee
 
-- Never overwrite `wiki/log.md`, `wiki/CONTEXT.md`, or the `wiki/bugs/` folder if they already exist (unless the user explicitly said "overwrite" in Step 1).
+- Never replace `wiki/log.md`, `wiki/CONTEXT.md`, or the `wiki/bugs/` folder if they already exist unless the user explicitly chose replacement in Step 1.
 - Never duplicate the `# Wiki workflow` section in CLAUDE.md.
-- The `.gitkeep` files are safe to overwrite (they're empty).
+- The `.gitkeep` files are safe to refresh because they are empty placeholders.
 
 ## Templates Location
 
@@ -152,6 +161,6 @@ Once the project rules file is updated, the following behaviors are active in ev
 | `read` | Reads all wiki files and summarizes project state, then asks "What are we working on?" |
 | `codemap` | Asks which folder(s) to scan, then generates one `wiki/code/<path>.md` per source file, including HTML/CSS, with purpose, functions/sections, and import/link wikilinks — viewable as a code dependency graph in Obsidian |
 
-**Auto-plan rule**: any response with 3+ steps for building something is automatically saved to `wiki/plans/active/<feature>.md` with YAML frontmatter (`status`, `created`, `updated`, `tags`, `related`) — no need to ask.
+**Auto-plan rule**: any response with 3+ steps for building something is saved to `wiki/plans/active/<feature>.md` with YAML frontmatter (`status`, `created`, `updated`, `tags`, `related`) so future sessions keep the same context.
 
 **Plan linking**: when saving a new plan, the agent scans existing plans for related ones and cross-links them using `[[wikilinks]]` and relationship tags (`builds-on`, `depends-on`, `replaces`, etc.). These wikilinks work natively in Obsidian's graph view and backlinks panel.
